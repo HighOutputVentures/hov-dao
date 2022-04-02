@@ -1,24 +1,38 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
 import "./IGnosisSafe.sol";
 
+/// @dev smart contract must implement ERC721 Standard
+/// @dev transfer and approval operations must be disabled. once minted, tokens cannot be transferred to another address
+/// @dev DAO must be able to mint new tokens. the minting of new tokens equates to membership into the DAO
+    /// @dev There's no indicator for the membership during minting
+/// @dev DAO must be able to burn existing tokens. burning of tokens equates to kicking out from the DAO
+    /// @dev There's still no indicator for kicking out a member
+/// @dev DAO must be able to update the token (change the tokenURI)
 contract Membership is ERC721URIStorage {
+    using Counters for Counters.Counter;
+
     string public constant NAME = "Membership";
 
     string public constant VERSION = "0.0.1";
-
-    uint256 public tokenCounter;
-
+    
     address public owner;
+    
+    Counters.Counter private _tokenIds;
 
     mapping(uint256 => bool) public mintedTokens;
 
-    modifier onlyNonMintedToken(uint256 _tokenId) {
-        require(!mintedTokens[_tokenId], "Disabled");
+    mapping(uint256 => address) public tokenOwner;
+
+    mapping(uint256 => string) public tokenURIs;
+
+    modifier nonMintedTokenOnly(uint256 _tokenId) {
+        require(!mintedTokens[_tokenId], "DISABLED");
 
         _;
     }
@@ -27,28 +41,20 @@ contract Membership is ERC721URIStorage {
         owner = _owner;
     }
 
-    function executeMint(
-        IGnosisSafe _safe,
-        uint256 _tokenId, 
-        string memory _tokenURI
-    ) external {
-        mint(_safe, _tokenId, _tokenURI);
+    function executeMint(IGnosisSafe _safe, address _owner, string memory _tokenURI) external {
+        _mint(_safe, _owner, _tokenURI);
     }
 
-    function mint(
-        IGnosisSafe safe,
-        uint256 _tokenId, 
-        string memory tokenURI
-    ) private {
+    function _mint(IGnosisSafe safe, address _owner, string memory _tokenURI) private {
         bytes memory data = abi.encodeWithSignature(
-            "createNFT(uint256,string)",
-            _tokenId,
-            tokenURI
+            "mint(address,string)",
+            _owner,
+            _tokenURI
         );
 
         require(
             safe.execTransactionFromModule(
-                _tokenId,
+                _owner,
                 0,
                 data,
                 Enum.Operation.Call
@@ -57,76 +63,56 @@ contract Membership is ERC721URIStorage {
         );
     }
 
-    function createNFT(uint256 _tokenId, string memory tokenURI) public onlyNonMintedToken(_tokenId) returns (uint256) {
-        _mint(owner, _tokenId);
-        _setTokenURI(_tokenId, tokenURI);
+    function mint(address _owner, string memory tokenURI)
+        public
+        returns (uint256)
+    {
+        _tokenIds.increment();
 
-        return _tokenId;
+        uint256 newItemId = _tokenIds.current();
+        
+        _mint(_owner, newItemId);
+        _setTokenURI(newItemId, tokenURI);
+
+        mintedTokens[newItemId] = true;
+        tokenOwner[newItemId] = _owner;
+        tokenURIs[newItemId] = tokenURI;
+
+        return newItemId;
+    }
+
+    function updateToken(uint256 _tokenId, string memory _tokenURI) public returns(string memory) {
+        _setTokenURI(_tokenId, _tokenURI);
+
+        tokenURIs[_tokenId] = _tokenURI;
+
+        return _tokenURI;
     }
 
     function transferFrom(
-        address from,
-        address to,
+        address,
+        address,
         uint256 _tokenId
-    ) public virtual override onlyNonMintedToken(_tokenId) {
-        string(abi.encodePacked(from, to, _tokenId));
-
-        require(false, "DISABLED");
-    }
+    ) public virtual override nonMintedTokenOnly(_tokenId) {}
 
     function safeTransferFrom(
-        address from,
-        address to,
+        address,
+        address,
         uint256 _tokenId
-    ) public virtual override onlyNonMintedToken(_tokenId) {
-        string(abi.encodePacked(from, to, _tokenId));
+    ) public virtual override nonMintedTokenOnly(_tokenId) {}
 
-        require(false, "DISABLED");
-    }
-
-    /**
-     * @dev See {IERC721-safeTransferFrom}.
-     */
     function safeTransferFrom(
-        address from,
-        address to,
+        address,
+        address,
         uint256 _tokenId,
         bytes memory _data
-    ) public virtual override onlyNonMintedToken(_tokenId) {
-        string(abi.encodePacked(from, to, _tokenId, _data));
+    ) public virtual override nonMintedTokenOnly(_tokenId) {}
 
-        require(false, "DISABLED");
-    }
-    
-    function approve(address to, uint256 _tokenId) public virtual override onlyNonMintedToken(_tokenId) {
-        string(abi.encodePacked(to, _tokenId));
+    function approve(address, uint256 _tokenId) public virtual override nonMintedTokenOnly(_tokenId) {}
 
-        require(false, "DISABLED");
-    }
-
-    function setApprovalForAll(address operator, bool approved) public virtual override {
-        string(abi.encodePacked(operator, approved));
-
-        require(false, "DISABLED");
-    }
-
-    function getApproved(uint256 tokenId) public view virtual override returns (address) {
-        string(abi.encodePacked(tokenId));
-
-        require(false, "DISABLED");
-
-        return address(this);
-    }
-
-    function isApprovedForAll(address _owner, address operator) public view virtual override returns (bool) {
-        string(abi.encodePacked(_owner, operator));
-
-        require(false, "DISABLED");
-
-        return false;
-    }
-
-    function burn(uint256 _tokenId) internal virtual onlyNonMintedToken(_tokenId) {
+    function burn(uint256 _tokenId) public virtual {
         super._burn(_tokenId);
+
+        delete mintedTokens[_tokenId];
     }
 }

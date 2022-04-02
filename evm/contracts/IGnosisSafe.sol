@@ -11,7 +11,7 @@ interface IGnosisSafe {
     /// @param data Data payload of module transaction.
     /// @param operation Operation type of module transaction.
     function execTransactionFromModule(
-        uint256 to,
+        address to,
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
