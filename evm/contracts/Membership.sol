@@ -114,5 +114,6 @@ contract Membership is ERC721URIStorage {
         super._burn(_tokenId);
 
         delete mintedTokens[_tokenId];
+        delete tokenOwner[_tokenId];
     }
 }
