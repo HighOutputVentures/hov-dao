@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "hardhat/console.sol";
 
 import "./IGnosisSafe.sol";
 
@@ -28,35 +27,13 @@ contract Membership is ERC721URIStorage {
     mapping(uint256 => string) public tokenData;
 
     modifier disabledTransferAndApprove() {
-        require(false, "transfer and approve are disabled");
+        require(false, "disabled!");
 
         _;
     }
 
     constructor(address _owner) ERC721("HOV Pass", "HOV") {
         owner = _owner;
-    }
-
-    function encodeTokenData(string memory _tokenData) public pure returns(bytes memory) {
-        return abi.encode(_tokenData);
-    }
-    
-    function decodeTokenData(bytes memory _tokenData) private pure returns(string memory) {
-        string memory first;
-
-        (first) = abi.decode(_tokenData, (string));
-
-        return first;
-    }
-
-    function concat(bytes memory _tokenData) private pure returns(string memory) {
-        string memory str;
-
-        str = decodeTokenData(_tokenData);
-
-        string memory tokenURI = string(abi.encodePacked(IPFS_BASE_URL, str));
-
-        return tokenURI;
     }
 
     function mint(address _recipient, bytes memory _tokenData)
@@ -102,6 +79,28 @@ contract Membership is ERC721URIStorage {
         delete tokenData[_tokenId];
 
         emit Transfer(owner, foundTokenOwner, _tokenId);
+    }
+
+    function encodeTokenData(string memory _tokenData) public pure returns(bytes memory) {
+        return abi.encode(_tokenData);
+    }
+    
+    function decodeTokenData(bytes memory _tokenData) public pure returns(string memory) {
+        string memory first;
+
+        (first) = abi.decode(_tokenData, (string));
+
+        return first;
+    }
+
+    function concat(bytes memory _tokenData) public pure returns(string memory) {
+        string memory decodedStr;
+
+        decodedStr = decodeTokenData(_tokenData);
+
+        string memory tokenURI = string(abi.encodePacked(IPFS_BASE_URL, decodedStr));
+
+        return tokenURI;
     }
 
     function transferFrom(
