@@ -10,9 +10,9 @@ import "./IGnosisSafe.sol";
 contract Membership is ERC721URIStorage {
     using Counters for Counters.Counter;
     
-    string public constant IPFS_BASE_URL = "https://ipfs.io/ipfs/";
-
     Counters.Counter private _tokenIds;
+
+    string public constant IPFS_BASE_URL = "https://ipfs.io/ipfs/";
 
     string public constant NAME = "Membership";
 
@@ -79,10 +79,6 @@ contract Membership is ERC721URIStorage {
         delete tokenData[_tokenId];
 
         emit Transfer(owner, foundTokenOwner, _tokenId);
-    }
-
-    function encodeTokenData(string memory _tokenData) public pure returns(bytes memory) {
-        return abi.encode(_tokenData);
     }
     
     function decodeTokenData(bytes memory _tokenData) public pure returns(string memory) {
