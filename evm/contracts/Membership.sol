@@ -31,36 +31,14 @@ contract Membership is ERC721URIStorage {
 
     mapping(uint256 => string) public tokenURIs;
 
-    modifier nonMintedTokenOnly(uint256 _tokenId) {
-        require(!mintedTokens[_tokenId], "DISABLED");
+    modifier disabledTransferAndApprove() {
+        require(false, "transfer and approve are disabled");
 
         _;
     }
 
     constructor(address _owner) ERC721("HOV Pass", "HOV") {
         owner = _owner;
-    }
-
-    function executeMint(IGnosisSafe _safe, address _owner, string memory _tokenURI) external {
-        _mint(_safe, _owner, _tokenURI);
-    }
-
-    function _mint(IGnosisSafe safe, address _owner, string memory _tokenURI) private {
-        bytes memory data = abi.encodeWithSignature(
-            "mint(address,string)",
-            _owner,
-            _tokenURI
-        );
-
-        require(
-            safe.execTransactionFromModule(
-                _owner,
-                0,
-                data,
-                Enum.Operation.Call
-            ),
-            "Cannot execute token minting."
-        );
     }
 
     function mint(address _owner, string memory tokenURI)
@@ -89,31 +67,31 @@ contract Membership is ERC721URIStorage {
         return _tokenURI;
     }
 
-    function transferFrom(
-        address,
-        address,
-        uint256 _tokenId
-    ) public virtual override nonMintedTokenOnly(_tokenId) {}
-
-    function safeTransferFrom(
-        address,
-        address,
-        uint256 _tokenId
-    ) public virtual override nonMintedTokenOnly(_tokenId) {}
-
-    function safeTransferFrom(
-        address,
-        address,
-        uint256 _tokenId,
-        bytes memory _data
-    ) public virtual override nonMintedTokenOnly(_tokenId) {}
-
-    function approve(address, uint256 _tokenId) public virtual override nonMintedTokenOnly(_tokenId) {}
-
     function burn(uint256 _tokenId) public virtual {
         super._burn(_tokenId);
 
         delete mintedTokens[_tokenId];
         delete tokenOwner[_tokenId];
     }
+
+    function transferFrom(
+        address,
+        address,
+        uint256 _tokenId
+    ) public virtual override disabledTransferAndApprove() {}
+
+    function safeTransferFrom(
+        address,
+        address,
+        uint256 _tokenId
+    ) public virtual override disabledTransferAndApprove() {}
+
+    function safeTransferFrom(
+        address,
+        address,
+        uint256 _tokenId,
+        bytes memory _data
+    ) public virtual override disabledTransferAndApprove() {}
+
+    function approve(address, uint256 _tokenId) public virtual override disabledTransferAndApprove() {}
 }
