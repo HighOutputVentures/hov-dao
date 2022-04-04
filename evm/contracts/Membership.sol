@@ -4,32 +4,28 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "hardhat/console.sol";
 
 import "./IGnosisSafe.sol";
 
-/// @dev smart contract must implement ERC721 Standard
-/// @dev transfer and approval operations must be disabled. once minted, tokens cannot be transferred to another address
-/// @dev DAO must be able to mint new tokens. the minting of new tokens equates to membership into the DAO
-    /// @dev There's no indicator for the membership during minting
-/// @dev DAO must be able to burn existing tokens. burning of tokens equates to kicking out from the DAO
-    /// @dev There's still no indicator for kicking out a member
-/// @dev DAO must be able to update the token (change the tokenURI)
 contract Membership is ERC721URIStorage {
     using Counters for Counters.Counter;
+    
+    string public constant IPFS_BASE_URL = "https://ipfs.io/ipfs/";
+
+    Counters.Counter private _tokenIds;
 
     string public constant NAME = "Membership";
 
     string public constant VERSION = "0.0.1";
     
     address public owner;
-    
-    Counters.Counter private _tokenIds;
 
     mapping(uint256 => bool) public mintedTokens;
 
     mapping(uint256 => address) public tokenOwner;
 
-    mapping(uint256 => string) public tokenURIs;
+    mapping(uint256 => string) public tokenData;
 
     modifier disabledTransferAndApprove() {
         require(false, "transfer and approve are disabled");
@@ -41,7 +37,29 @@ contract Membership is ERC721URIStorage {
         owner = _owner;
     }
 
-    function mint(address _owner, string memory tokenURI)
+    function encodeTokenData(string memory _tokenData) public pure returns(bytes memory) {
+        return abi.encode(_tokenData);
+    }
+    
+    function decodeTokenData(bytes memory _tokenData) private pure returns(string memory) {
+        string memory first;
+
+        (first) = abi.decode(_tokenData, (string));
+
+        return first;
+    }
+
+    function concat(bytes memory _tokenData) private pure returns(string memory) {
+        string memory str;
+
+        str = decodeTokenData(_tokenData);
+
+        string memory tokenURI = string(abi.encodePacked(IPFS_BASE_URL, str));
+
+        return tokenURI;
+    }
+
+    function mint(address _recipient, bytes memory _tokenData)
         public
         returns (uint256)
     {
@@ -49,26 +67,29 @@ contract Membership is ERC721URIStorage {
 
         uint256 newItemId = _tokenIds.current();
         
-        _mint(_owner, newItemId);
+        _mint(_recipient, newItemId);
+        
+        string memory tokenURI = concat(_tokenData);
+        
         _setTokenURI(newItemId, tokenURI);
 
         mintedTokens[newItemId] = true;
+        tokenOwner[newItemId] = _recipient;
+        tokenData[newItemId] = decodeTokenData(_tokenData);
 
-        tokenOwner[newItemId] = _owner;
-
-        tokenURIs[newItemId] = tokenURI;
-
-        emit Transfer(owner, _owner, newItemId);
+        emit Transfer(owner, _recipient, newItemId);
 
         return newItemId;
     }
 
-    function updateToken(uint256 _tokenId, string memory _tokenURI) public returns(string memory) {
-        _setTokenURI(_tokenId, _tokenURI);
+    function updateToken(uint256 _tokenId, bytes memory _tokenData) public returns(bytes memory) {
+        string memory tokenURI = concat(_tokenData);
 
-        tokenURIs[_tokenId] = _tokenURI;
+        _setTokenURI(_tokenId, tokenURI);
 
-        return _tokenURI;
+        tokenData[_tokenId] = decodeTokenData(_tokenData);
+
+        return _tokenData;
     }
 
     function burn(uint256 _tokenId) public virtual {
@@ -78,6 +99,7 @@ contract Membership is ERC721URIStorage {
 
         delete mintedTokens[_tokenId];
         delete tokenOwner[_tokenId];
+        delete tokenData[_tokenId];
 
         emit Transfer(owner, foundTokenOwner, _tokenId);
     }
