@@ -53,8 +53,12 @@ contract Membership is ERC721URIStorage {
         _setTokenURI(newItemId, tokenURI);
 
         mintedTokens[newItemId] = true;
+
         tokenOwner[newItemId] = _owner;
+
         tokenURIs[newItemId] = tokenURI;
+
+        emit Transfer(owner, _owner, newItemId);
 
         return newItemId;
     }
@@ -70,8 +74,12 @@ contract Membership is ERC721URIStorage {
     function burn(uint256 _tokenId) public virtual {
         super._burn(_tokenId);
 
+        address foundTokenOwner = tokenOwner[_tokenId];
+
         delete mintedTokens[_tokenId];
         delete tokenOwner[_tokenId];
+
+        emit Transfer(owner, foundTokenOwner, _tokenId);
     }
 
     function transferFrom(
