@@ -1,3 +1,5 @@
+import EthersAdapter from '@gnosis.pm/safe-ethers-lib';
+import Safe from '@gnosis.pm/safe-core-sdk';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { Contract, constants } from 'ethers';
@@ -14,10 +16,51 @@ describe('Membership', function () {
     beforeEach(async function () {
       const [signer, recipient] = await ethers.getSigners();
 
+      const SINGLETON_SOURCE = `
+        contract Test {
+            address _singleton;
+            address public creator;
+            bool public isInitialized;
+            constructor() payable {
+                creator = msg.sender;
+            }
+            function init() public {
+                require(!isInitialized, "Is initialized");
+                creator = msg.sender;
+                isInitialized = true;
+            }
+
+            function masterCopy() public pure returns (address) {
+                return address(0);
+            }
+
+            function forward(address to, bytes memory data) public returns (bytes memory result) {
+                (,result) = to.call(data);
+            }
+        }`;
+
+      const ethAdapter = new EthersAdapter({
+        ethers,
+        signer,
+      });
+
+      const GnosisProxy = await ethers.getContractFactory('GnosisSafeProxy');
+      const proxy = await GnosisProxy.deploy(AddressZero);
+
+      await proxy.deployed();
+
+      const SAFE_ADDRESS = AddressZero;
+
+      const safeSdk: Safe = await Safe.create({
+        ethAdapter,
+        safeAddress: SAFE_ADDRESS,
+      });
+
       this.recipient = recipient;
 
       const Membership = await ethers.getContractFactory('Membership', signer);
-      membership = await Membership.deploy(signer.address);
+
+      membership = await Membership.deploy(safeSdk.getAddress());
 
       await membership.deployed();
     });
