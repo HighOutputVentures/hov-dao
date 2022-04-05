@@ -3,6 +3,7 @@ import Safe from '@gnosis.pm/safe-core-sdk';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { Contract, constants } from 'ethers';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 const { AbiCoder } = ethers.utils;
 const { AddressZero } = constants;
@@ -12,51 +13,52 @@ const abiCoder = new AbiCoder();
 describe('Membership', function () {
   describe('Disabled methods', () => {
     let membership: Contract;
+    let signer: SignerWithAddress;
+    let recipient: SignerWithAddress;
 
     beforeEach(async function () {
-      const [signer, recipient] = await ethers.getSigners();
-
-      const SINGLETON_SOURCE = `
-        contract Test {
-            address _singleton;
-            address public creator;
-            bool public isInitialized;
-            constructor() payable {
-                creator = msg.sender;
-            }
-            function init() public {
-                require(!isInitialized, "Is initialized");
-                creator = msg.sender;
-                isInitialized = true;
-            }
-
-            function masterCopy() public pure returns (address) {
-                return address(0);
-            }
-
-            function forward(address to, bytes memory data) public returns (bytes memory result) {
-                (,result) = to.call(data);
-            }
-        }`;
+      [signer, recipient] = await ethers.getSigners();
 
       const ethAdapter = new EthersAdapter({
         ethers,
         signer,
       });
 
-      const GnosisProxy = await ethers.getContractFactory('GnosisSafeProxy');
-      const proxy = await GnosisProxy.deploy(AddressZero);
+      const GnosisSafeMasterCopy = await ethers.getContractFactory(
+        'GnosisSafe',
+        signer
+      );
+
+      const gnosisSafeMasterCopy = await GnosisSafeMasterCopy.deploy();
+
+      const GnosisSafeProxy = await ethers.getContractFactory(
+        'GnosisSafeProxy',
+        signer
+      );
+      const proxy = await GnosisSafeProxy.deploy(gnosisSafeMasterCopy.address);
 
       await proxy.deployed();
 
-      const SAFE_ADDRESS = AddressZero;
+      const copy = GnosisSafeMasterCopy.attach(proxy.address);
+      await copy.setup(
+        [signer.address],
+        1,
+        AddressZero,
+        '0x',
+        AddressZero,
+        AddressZero,
+        0,
+        AddressZero
+      );
+
+      this.gnosisSafe = copy;
 
       const safeSdk: Safe = await Safe.create({
         ethAdapter,
-        safeAddress: SAFE_ADDRESS,
+        safeAddress: proxy.address,
       });
 
-      this.recipient = recipient;
+      this.safeSdk = safeSdk;
 
       const Membership = await ethers.getContractFactory('Membership', signer);
 
@@ -85,7 +87,25 @@ describe('Membership', function () {
 
         const tokenData = abiCoder.encode(['string'], [ipfsHash]);
 
-        const mintTx = await membership.mint(this.recipient.address, tokenData);
+        const txHash = await membership.getTransactionHash(
+          recipient.address,
+          tokenData
+        );
+
+        const firstSafeSignature = await this.safeSdk.signTransactionHash(
+          txHash
+        );
+
+        const signatureBytes = ethers.utils.solidityPack(
+          ['bytes'],
+          [firstSafeSignature.data]
+        );
+
+        const mintTx = await membership.mint(
+          recipient.address,
+          tokenData,
+          signatureBytes
+        );
 
         await mintTx.wait();
 
@@ -95,7 +115,7 @@ describe('Membership', function () {
 
         const tokenOwnerResult = await membership.tokenOwner(1);
 
-        expect(tokenOwnerResult).to.be.equals(this.recipient.address);
+        expect(tokenOwnerResult).to.be.equals(recipient.address);
       });
     });
 
@@ -105,7 +125,25 @@ describe('Membership', function () {
 
         const tokenData = abiCoder.encode(['string'], [ipfsHash]);
 
-        const mintTx = await membership.mint(this.recipient.address, tokenData);
+        const txHash = await membership.getTransactionHash(
+          recipient.address,
+          tokenData
+        );
+
+        const firstSafeSignature = await this.safeSdk.signTransactionHash(
+          txHash
+        );
+
+        const signatureBytes = ethers.utils.solidityPack(
+          ['bytes'],
+          [firstSafeSignature.data]
+        );
+
+        const mintTx = await membership.mint(
+          recipient.address,
+          tokenData,
+          signatureBytes
+        );
 
         await mintTx.wait();
 
@@ -113,13 +151,28 @@ describe('Membership', function () {
 
         const updatedTokenData = abiCoder.encode(['string'], [updatedIpfsHash]);
 
-        const updateTokenTx = await membership.updateToken(1, updatedTokenData);
+        const updateTokenTxHash =
+          await membership.getTransactionUpdateTokenHash(1, updatedTokenData);
+
+        const firstUpdateTokenSignature =
+          await this.safeSdk.signTransactionHash(updateTokenTxHash);
+
+        const updateSignatureBytes = ethers.utils.solidityPack(
+          ['bytes'],
+          [firstUpdateTokenSignature.data]
+        );
+
+        const updateTokenTx = await membership.updateToken(
+          1,
+          updatedTokenData,
+          updateSignatureBytes
+        );
 
         await updateTokenTx.wait();
 
         const tokenOwnerResult = await membership.tokenOwner(1);
 
-        expect(tokenOwnerResult).to.be.equals(this.recipient.address);
+        expect(tokenOwnerResult).to.be.equals(recipient.address);
 
         const tokenDataResult = await membership.tokenData(1);
 
@@ -133,11 +186,40 @@ describe('Membership', function () {
 
         const tokenData = abiCoder.encode(['string'], [ipfsHash]);
 
-        const mintTx = await membership.mint(this.recipient.address, tokenData);
+        const txHash = await membership.getTransactionHash(
+          recipient.address,
+          tokenData
+        );
+
+        const firstSafeSignature = await this.safeSdk.signTransactionHash(
+          txHash
+        );
+
+        const signatureBytes = ethers.utils.solidityPack(
+          ['bytes'],
+          [firstSafeSignature.data]
+        );
+
+        const mintTx = await membership.mint(
+          recipient.address,
+          tokenData,
+          signatureBytes
+        );
 
         await mintTx.wait();
 
-        const burnTx = await membership.burn(1);
+        const burnTxHash = await membership.getTransactionBurnHash(1);
+
+        const firstBurnSignature = await this.safeSdk.signTransactionHash(
+          burnTxHash
+        );
+
+        const burnSignatureBytes = ethers.utils.solidityPack(
+          ['bytes'],
+          [firstBurnSignature.data]
+        );
+
+        const burnTx = await membership.burn(1, burnSignatureBytes);
 
         await burnTx.wait();
 
