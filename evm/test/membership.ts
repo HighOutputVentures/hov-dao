@@ -1,14 +1,23 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { Contract } from 'ethers';
+import { Contract, constants } from 'ethers';
+
+const { AbiCoder } = ethers.utils;
+const { AddressZero } = constants;
+
+const abiCoder = new AbiCoder();
 
 describe('Membership', function () {
   describe('Disabled methods', () => {
     let membership: Contract;
 
-    beforeEach(async () => {
-      const Membership = await ethers.getContractFactory('Membership');
-      membership = await Membership.deploy();
+    beforeEach(async function () {
+      const [signer, recipient] = await ethers.getSigners();
+
+      this.recipient = recipient;
+
+      const Membership = await ethers.getContractFactory('Membership', signer);
+      membership = await Membership.deploy(signer.address);
 
       await membership.deployed();
     });
@@ -19,32 +28,83 @@ describe('Membership', function () {
       });
     });
 
-    describe('#setApprovalForAll', () => {
-      it('should be disabled', async function () {
-        await expect(membership.setApprovalForAll(membership.address, true))
-          .reverted;
-      });
-    });
-
-    describe('#getApproved', () => {
-      it('should be disabled', async function () {
-        await expect(membership.getApproved(1)).reverted;
-      });
-    });
-
-    describe('#isApprovedAll', () => {
-      it('should be disabled', async function () {
-        await expect(
-          membership.isApprovedForAll(membership.address, membership.address)
-        ).reverted;
-      });
-    });
-
     describe('#transferFrom', () => {
       it('should be disabled', async function () {
         await expect(
           membership.transferFrom(membership.address, membership.address, 1)
         ).reverted;
+      });
+    });
+
+    describe('#mint', () => {
+      it('should apply the correct mapping', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+
+        const mintTx = await membership.mint(this.recipient.address, tokenData);
+
+        await mintTx.wait();
+
+        const tokenDataResult = await membership.tokenData(1);
+
+        expect(tokenDataResult).to.be.equal(ipfsHash);
+
+        const tokenOwnerResult = await membership.tokenOwner(1);
+
+        expect(tokenOwnerResult).to.be.equals(this.recipient.address);
+      });
+    });
+
+    describe('#update', () => {
+      it('should update the following mappings', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+
+        const mintTx = await membership.mint(this.recipient.address, tokenData);
+
+        await mintTx.wait();
+
+        const updatedIpfsHash = 'HASH';
+
+        const updatedTokenData = abiCoder.encode(['string'], [updatedIpfsHash]);
+
+        const updateTokenTx = await membership.updateToken(1, updatedTokenData);
+
+        await updateTokenTx.wait();
+
+        const tokenOwnerResult = await membership.tokenOwner(1);
+
+        expect(tokenOwnerResult).to.be.equals(this.recipient.address);
+
+        const tokenDataResult = await membership.tokenData(1);
+
+        expect(tokenDataResult).to.be.equal(updatedIpfsHash);
+      });
+    });
+
+    describe('#burn', () => {
+      it('should update the following mappings', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+
+        const mintTx = await membership.mint(this.recipient.address, tokenData);
+
+        await mintTx.wait();
+
+        const burnTx = await membership.burn(1);
+
+        await burnTx.wait();
+
+        const owner = await membership.tokenOwner(1);
+
+        expect(owner).to.be.equals(AddressZero);
+
+        const data = await membership.tokenData(1);
+
+        expect(data).to.be.equals('');
       });
     });
   });

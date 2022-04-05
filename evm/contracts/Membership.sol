@@ -2,12 +2,11 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
 import "./IGnosisSafe.sol";
 
-contract Membership is ERC721URIStorage {
+contract Membership is ERC721 {
     using Counters for Counters.Counter;
     
     Counters.Counter private _tokenIds;
@@ -19,8 +18,6 @@ contract Membership is ERC721URIStorage {
     string public constant VERSION = "0.0.1";
     
     address public owner;
-
-    mapping(uint256 => bool) public mintedTokens;
 
     mapping(uint256 => address) public tokenOwner;
 
@@ -45,12 +42,7 @@ contract Membership is ERC721URIStorage {
         uint256 newItemId = _tokenIds.current();
         
         _mint(_recipient, newItemId);
-        
-        string memory tokenURI = concat(_tokenData);
-        
-        _setTokenURI(newItemId, tokenURI);
 
-        mintedTokens[newItemId] = true;
         tokenOwner[newItemId] = _recipient;
         tokenData[newItemId] = decodeTokenData(_tokenData);
 
@@ -60,10 +52,6 @@ contract Membership is ERC721URIStorage {
     }
 
     function updateToken(uint256 _tokenId, bytes memory _tokenData) public returns(bytes memory) {
-        string memory tokenURI = concat(_tokenData);
-
-        _setTokenURI(_tokenId, tokenURI);
-
         tokenData[_tokenId] = decodeTokenData(_tokenData);
 
         return _tokenData;
@@ -74,13 +62,12 @@ contract Membership is ERC721URIStorage {
 
         address foundTokenOwner = tokenOwner[_tokenId];
 
-        delete mintedTokens[_tokenId];
         delete tokenOwner[_tokenId];
         delete tokenData[_tokenId];
 
         emit Transfer(owner, foundTokenOwner, _tokenId);
     }
-    
+
     function decodeTokenData(bytes memory _tokenData) public pure returns(string memory) {
         string memory first;
 
