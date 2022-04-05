@@ -14,10 +14,9 @@ describe('Membership', function () {
   describe('Disabled methods', () => {
     let membership: Contract;
     let signer: SignerWithAddress;
-    let recipient: SignerWithAddress;
 
     beforeEach(async function () {
-      [signer, recipient] = await ethers.getSigners();
+      [signer] = await ethers.getSigners();
 
       const ethAdapter = new EthersAdapter({
         ethers,
@@ -79,6 +78,63 @@ describe('Membership', function () {
           membership.transferFrom(membership.address, membership.address, 1)
         ).reverted;
       });
+    });
+  });
+
+  describe('Usable methods', () => {
+    let membership: Contract;
+    let signer: SignerWithAddress;
+    let recipient: SignerWithAddress;
+
+    beforeEach(async function () {
+      [signer, recipient] = await ethers.getSigners();
+
+      const ethAdapter = new EthersAdapter({
+        ethers,
+        signer,
+      });
+
+      const GnosisSafeMasterCopy = await ethers.getContractFactory(
+        'GnosisSafe',
+        signer
+      );
+
+      const gnosisSafeMasterCopy = await GnosisSafeMasterCopy.deploy();
+
+      const GnosisSafeProxy = await ethers.getContractFactory(
+        'GnosisSafeProxy',
+        signer
+      );
+      const proxy = await GnosisSafeProxy.deploy(gnosisSafeMasterCopy.address);
+
+      await proxy.deployed();
+
+      const copy = GnosisSafeMasterCopy.attach(proxy.address);
+      await copy.setup(
+        [signer.address],
+        1,
+        AddressZero,
+        '0x',
+        AddressZero,
+        AddressZero,
+        0,
+        AddressZero
+      );
+
+      this.gnosisSafe = copy;
+
+      const safeSdk: Safe = await Safe.create({
+        ethAdapter,
+        safeAddress: proxy.address,
+      });
+
+      this.safeSdk = safeSdk;
+
+      const Membership = await ethers.getContractFactory('Membership', signer);
+
+      membership = await Membership.deploy(safeSdk.getAddress());
+
+      await membership.deployed();
     });
 
     describe('#mint', () => {
