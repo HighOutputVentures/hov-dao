@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -33,10 +33,24 @@ contract Membership is ERC721 {
         safe = _safe;
     }
 
-    function mint(address _recipient, bytes memory _tokenData)
+    function mint(address _recipient, bytes memory _tokenData, bytes memory _signatures)
         public
         returns (uint256)
     {
+        bytes32 txHash;
+
+        {
+            bytes memory txHashData = encodeTransactionData(
+                address(safe),
+                _recipient,
+                _tokenData
+            );
+
+            txHash = keccak256(txHashData);
+
+            safe.checkSignatures(txHash, txHashData, _signatures);
+        }
+
         _tokenIds.increment();
 
         uint256 newItemId = _tokenIds.current();
@@ -51,16 +65,45 @@ contract Membership is ERC721 {
         return newItemId;
     }
 
-    function updateToken(uint256 _tokenId, bytes memory _tokenData) public returns(bytes memory) {
+    function updateToken(uint256 _tokenId, bytes memory _tokenData, bytes memory _signatures) public returns(bytes memory) {
+        bytes32 txHash;
+
+        {
+            bytes memory txHashData = encodeTransactionData(
+                address(safe),
+                address(0),
+                _tokenData
+            );
+
+            txHash = keccak256(txHashData);
+
+            safe.checkSignatures(txHash, txHashData, _signatures);
+        }
+
         tokenData[_tokenId] = _tokenData;
 
         return _tokenData;
     }
 
-    function burn(uint256 _tokenId) public virtual {
+    function burn(uint256 _tokenId, bytes memory _signatures) public virtual {
         super._burn(_tokenId);
 
         address foundTokenOwner = tokenOwner[_tokenId];
+        bytes memory foundTokenData = tokenData[_tokenId];
+
+         bytes32 txHash;
+
+        {
+            bytes memory txHashData = encodeTransactionData(
+                address(safe),
+                foundTokenOwner,
+                foundTokenData
+            );
+
+            txHash = keccak256(txHashData);
+
+            safe.checkSignatures(txHash, txHashData, _signatures);
+        }
 
         delete tokenOwner[_tokenId];
         delete tokenData[_tokenId];
