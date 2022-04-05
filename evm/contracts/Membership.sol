@@ -17,11 +17,11 @@ contract Membership is ERC721 {
 
     string public constant VERSION = "0.0.1";
     
-    address public owner;
+    IGnosisSafe public safe;
 
     mapping(uint256 => address) public tokenOwner;
 
-    mapping(uint256 => string) public tokenData;
+    mapping(uint256 => bytes) public tokenData;
 
     modifier disabledTransferAndApprove() {
         require(false, "disabled!");
@@ -29,8 +29,8 @@ contract Membership is ERC721 {
         _;
     }
 
-    constructor(address _owner) ERC721("HOV Pass", "HOV") {
-        owner = _owner;
+    constructor(IGnosisSafe _safe) ERC721("HOV Pass", "HOV") {
+        safe = _safe;
     }
 
     function mint(address _recipient, bytes memory _tokenData)
@@ -44,15 +44,15 @@ contract Membership is ERC721 {
         _mint(_recipient, newItemId);
 
         tokenOwner[newItemId] = _recipient;
-        tokenData[newItemId] = decodeTokenData(_tokenData);
+        tokenData[newItemId] = _tokenData;
 
-        emit Transfer(owner, _recipient, newItemId);
+        emit Transfer(_recipient, address(safe), newItemId);
 
         return newItemId;
     }
 
     function updateToken(uint256 _tokenId, bytes memory _tokenData) public returns(bytes memory) {
-        tokenData[_tokenId] = decodeTokenData(_tokenData);
+        tokenData[_tokenId] = _tokenData;
 
         return _tokenData;
     }
@@ -65,8 +65,35 @@ contract Membership is ERC721 {
         delete tokenOwner[_tokenId];
         delete tokenData[_tokenId];
 
-        emit Transfer(owner, foundTokenOwner, _tokenId);
+        emit Transfer(address(safe), foundTokenOwner, _tokenId);
     }
+    
+    function encodeTransactionData(
+        address _safe, 
+        address _recipient, 
+        bytes memory _tokenData
+    )
+        public
+        pure
+        returns (bytes memory)
+    {
+        return
+            abi.encodePacked(
+                bytes1(0x19),
+                bytes1(0x01),
+                keccak256(
+                    abi.encodeWithSignature(
+                        "mint(address,address,bytes)",
+                        _safe,
+                        _recipient,
+                        _tokenData,
+                        abi.encodePacked(address(0))
+                    )
+                )
+            );
+    }
+
+    
 
     function decodeTokenData(bytes memory _tokenData) public pure returns(string memory) {
         string memory first;

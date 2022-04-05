@@ -48,7 +48,7 @@ describe('Membership', function () {
 
         const tokenDataResult = await membership.tokenData(1);
 
-        expect(tokenDataResult).to.be.equal(ipfsHash);
+        expect(tokenDataResult).to.be.equal(tokenData);
 
         const tokenOwnerResult = await membership.tokenOwner(1);
 
@@ -80,7 +80,7 @@ describe('Membership', function () {
 
         const tokenDataResult = await membership.tokenData(1);
 
-        expect(tokenDataResult).to.be.equal(updatedIpfsHash);
+        expect(tokenDataResult).to.be.equal(updatedTokenData);
       });
     });
 
@@ -104,7 +104,7 @@ describe('Membership', function () {
 
         const data = await membership.tokenData(1);
 
-        expect(data).to.be.equals('');
+        expect(data).to.be.equals('0x');
       });
     });
   });
