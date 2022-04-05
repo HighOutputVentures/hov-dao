@@ -12,10 +12,6 @@ contract Membership is ERC721 {
     Counters.Counter private _tokenIds;
 
     string public constant IPFS_BASE_URL = "https://ipfs.io/ipfs/";
-
-    string public constant NAME = "Membership";
-
-    string public constant VERSION = "0.0.1";
     
     IGnosisSafe public safe;
 
@@ -29,7 +25,7 @@ contract Membership is ERC721 {
         _;
     }
 
-    constructor(IGnosisSafe _safe) ERC721("HOV Pass", "HOV") {
+    constructor(IGnosisSafe _safe) ERC721("HOVX Pass", "HOVX") {
         safe = _safe;
     }
 
