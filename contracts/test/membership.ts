@@ -150,6 +150,33 @@ describe('Membership', function () {
     });
 
     describe('#mint', () => {
+      beforeEach(async () => {
+        await signer.sendTransaction({
+          to: safe.getAddress(),
+          value: ethers.utils.parseEther('1.0'),
+        });
+
+        const enableModuleTxData = await safe.createTransaction([
+          {
+            to: safe.getAddress(),
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'enableModule',
+              abi: ['function enableModule(address)'],
+              values: [membership.address],
+            }),
+          },
+        ]);
+
+        await safe.signTransaction(enableModuleTxData);
+
+        const executedEnableModuleTx = await safe.executeTransaction(
+          enableModuleTxData
+        );
+
+        await executedEnableModuleTx.transactionResponse?.wait();
+      });
+
       it('should be reverted when the sender is not the safe itself', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
@@ -160,102 +187,10 @@ describe('Membership', function () {
         ).to.be.revertedWith('HOVX001');
       });
 
-      it('should apply the correct mapping', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
-
-        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
-
-        await signer.sendTransaction({
-          to: safe.getAddress(),
-          value: ethers.utils.parseEther('1.0'),
-        });
-
-        const enableModuleTxData = await safe.createTransaction([
-          {
-            to: safe.getAddress(),
-            value: '0',
-            data: encodeTransactionData({
-              fn: 'enableModule',
-              abi: ['function enableModule(address)'],
-              values: [membership.address],
-            }),
-          },
-        ]);
-
-        await safe.signTransaction(enableModuleTxData);
-
-        const executedEnableModuleTx = await safe.executeTransaction(
-          enableModuleTxData
-        );
-
-        await executedEnableModuleTx.transactionResponse?.wait();
-
-        const txData = await safe.createTransaction([
-          {
-            to: membership.address,
-            value: '0',
-            data: encodeTransactionData({
-              fn: 'mint',
-              abi: ['function mint(address,bytes)'],
-              values: [recipient.address, tokenData],
-            }),
-          },
-        ]);
-
-        const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 350000,
-        });
-
-        await executedTransaction.transactionResponse?.wait();
-
-        const tokenDataResult = await membership.tokenData(1);
-
-        expect(tokenDataResult).to.be.equal(tokenData);
-
-        const ownerResult = await membership.ownerOf(1);
-
-        expect(ownerResult).to.be.equals(recipient.address);
-
-        const ownerTokenResult = await membership.ownerToken(recipient.address);
-
-        expect(ownerTokenResult).to.be.equals(1);
-
-        const tokenURI = await membership.tokenURI(1);
-
-        expect(tokenURI).to.be.equals(
-          'https://ipfs.io/ipfs/QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo'
-        );
-      });
-
       it('should revert when the recipient already have an existing token', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
         const tokenData = abiCoder.encode(['string'], [ipfsHash]);
-
-        await signer.sendTransaction({
-          to: safe.getAddress(),
-          value: ethers.utils.parseEther('1.0'),
-        });
-
-        const enableModuleTxData = await safe.createTransaction([
-          {
-            to: safe.getAddress(),
-            value: '0',
-            data: encodeTransactionData({
-              fn: 'enableModule',
-              abi: ['function enableModule(address)'],
-              values: [membership.address],
-            }),
-          },
-        ]);
-
-        await safe.signTransaction(enableModuleTxData);
-
-        const executedEnableModuleTx = await safe.executeTransaction(
-          enableModuleTxData
-        );
-
-        await executedEnableModuleTx.transactionResponse?.wait();
 
         const txData = await safe.createTransaction([
           {
@@ -293,18 +228,124 @@ describe('Membership', function () {
           })
         ).to.be.revertedWith('GS013');
       });
-    });
 
-    describe('#burn', () => {
-      it('should be reverted when the sender is not the safe itself', async function () {
-        await expect(membership.burn(1)).to.be.revertedWith('HOVX001');
-      });
-
-      it('should update the following mappings', async function () {
+      it('should have correct tokenData given the tokenId', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
         const tokenData = abiCoder.encode(['string'], [ipfsHash]);
 
+        const txData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'mint',
+              abi: ['function mint(address,bytes)'],
+              values: [recipient.address, tokenData],
+            }),
+          },
+        ]);
+
+        const executedTransaction = await safe.executeTransaction(txData, {
+          gasLimit: 350000,
+        });
+
+        await executedTransaction.transactionResponse?.wait();
+
+        const tokenDataResult = await membership.tokenData(1);
+
+        expect(tokenDataResult).to.be.equal(tokenData);
+      });
+
+      it('should have the correct owner given the tokenId', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+
+        const txData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'mint',
+              abi: ['function mint(address,bytes)'],
+              values: [recipient.address, tokenData],
+            }),
+          },
+        ]);
+
+        const executedTransaction = await safe.executeTransaction(txData, {
+          gasLimit: 350000,
+        });
+
+        await executedTransaction.transactionResponse?.wait();
+
+        const ownerResult = await membership.ownerOf(1);
+
+        expect(ownerResult).to.be.equals(recipient.address);
+      });
+
+      it('should have the correct token id given the owner', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+
+        const txData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'mint',
+              abi: ['function mint(address,bytes)'],
+              values: [recipient.address, tokenData],
+            }),
+          },
+        ]);
+
+        const executedTransaction = await safe.executeTransaction(txData, {
+          gasLimit: 350000,
+        });
+
+        await executedTransaction.transactionResponse?.wait();
+
+        const ownerTokenResult = await membership.ownerToken(recipient.address);
+
+        expect(ownerTokenResult).to.be.equals(1);
+      });
+
+      it('should have the correct decoded tokenURI', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+
+        const txData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'mint',
+              abi: ['function mint(address,bytes)'],
+              values: [recipient.address, tokenData],
+            }),
+          },
+        ]);
+
+        const executedTransaction = await safe.executeTransaction(txData, {
+          gasLimit: 350000,
+        });
+
+        await executedTransaction.transactionResponse?.wait();
+
+        const tokenURI = await membership.tokenURI(1);
+
+        expect(tokenURI).to.be.equals(
+          'https://ipfs.io/ipfs/QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo'
+        );
+      });
+    });
+
+    describe('#burn', () => {
+      beforeEach(async () => {
         await signer.sendTransaction({
           to: safe.getAddress(),
           value: ethers.utils.parseEther('1.0'),
@@ -329,6 +370,36 @@ describe('Membership', function () {
         );
 
         await executedEnableModuleTx.transactionResponse?.wait();
+      });
+
+      it('should be reverted when the sender is not the safe itself', async function () {
+        await expect(membership.burn(1)).to.be.revertedWith('HOVX001');
+      });
+
+      it('should revert when burning non-existent token', async function () {
+        const burnTxData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'burn',
+              abi: ['function burn(uint256)'],
+              values: [1],
+            }),
+          },
+        ]);
+
+        await expect(
+          safe.executeTransaction(burnTxData, {
+            gasLimit: 350000,
+          })
+        ).revertedWith('GS013');
+      });
+
+      it('should revert when getting the owner of the burned token id', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
 
         const txData = await safe.createTransaction([
           {
@@ -367,41 +438,30 @@ describe('Membership', function () {
         await executedBurnTx.transactionResponse?.wait();
 
         await expect(membership.ownerOf(1)).to.be.reverted;
-
-        const data = await membership.tokenData(1);
-
-        expect(data).to.be.equals('0x');
-
-        const token = await membership.ownerToken(recipient.address);
-
-        expect(token).to.be.equals(0);
       });
 
-      it('should revert when burning non-existent token', async function () {
-        await signer.sendTransaction({
-          to: safe.getAddress(),
-          value: ethers.utils.parseEther('1.0'),
-        });
+      it('should the tokenData be address zero when getting the burned token id', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const enableModuleTxData = await safe.createTransaction([
+        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+
+        const txData = await safe.createTransaction([
           {
-            to: safe.getAddress(),
+            to: membership.address,
             value: '0',
             data: encodeTransactionData({
-              fn: 'enableModule',
-              abi: ['function enableModule(address)'],
-              values: [membership.address],
+              fn: 'mint',
+              abi: ['function mint(address,bytes)'],
+              values: [recipient.address, tokenData],
             }),
           },
         ]);
 
-        await safe.signTransaction(enableModuleTxData);
+        const executedTransaction = await safe.executeTransaction(txData, {
+          gasLimit: 350000,
+        });
 
-        const executedEnableModuleTx = await safe.executeTransaction(
-          enableModuleTxData
-        );
-
-        await executedEnableModuleTx.transactionResponse?.wait();
+        await executedTransaction.transactionResponse?.wait();
 
         const burnTxData = await safe.createTransaction([
           {
@@ -415,26 +475,66 @@ describe('Membership', function () {
           },
         ]);
 
-        await expect(
-          safe.executeTransaction(burnTxData, {
-            gasLimit: 350000,
-          })
-        ).revertedWith('GS013');
-      });
-    });
+        const executedBurnTx = await safe.executeTransaction(burnTxData, {
+          gasLimit: 350000,
+        });
 
-    describe('#updateToken', () => {
-      it('should be reverted when the sender is not the safe itself', async function () {
+        await executedBurnTx.transactionResponse?.wait();
+
+        const data = await membership.tokenData(1);
+
+        expect(data).to.be.equals('0x');
+      });
+
+      it('should return 0 when getting the ownerToken using the token id', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
         const tokenData = abiCoder.encode(['string'], [ipfsHash]);
 
-        await expect(
-          membership.updateToken(recipient.address, tokenData)
-        ).to.be.revertedWith('HOVX001');
-      });
+        const txData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'mint',
+              abi: ['function mint(address,bytes)'],
+              values: [recipient.address, tokenData],
+            }),
+          },
+        ]);
 
-      it('should throw an error when the owner have no tokens at all', async function () {
+        const executedTransaction = await safe.executeTransaction(txData, {
+          gasLimit: 350000,
+        });
+
+        await executedTransaction.transactionResponse?.wait();
+
+        const burnTxData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'burn',
+              abi: ['function burn(uint256)'],
+              values: [1],
+            }),
+          },
+        ]);
+
+        const executedBurnTx = await safe.executeTransaction(burnTxData, {
+          gasLimit: 350000,
+        });
+
+        await executedBurnTx.transactionResponse?.wait();
+
+        const token = await membership.ownerToken(recipient.address);
+
+        expect(token).to.be.equals(0);
+      });
+    });
+
+    describe('#updateToken', () => {
+      beforeEach(async () => {
         await signer.sendTransaction({
           to: safe.getAddress(),
           value: ethers.utils.parseEther('1.0'),
@@ -459,7 +559,19 @@ describe('Membership', function () {
         );
 
         await executedEnableModuleTx.transactionResponse?.wait();
+      });
 
+      it('should be reverted when the sender is not the safe itself', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+
+        await expect(
+          membership.updateToken(recipient.address, tokenData)
+        ).to.be.revertedWith('HOVX001');
+      });
+
+      it('should throw an error when the owner have no tokens at all', async function () {
         const updatedIpfsHash = 'HASH';
 
         const updatedTokenData = abiCoder.encode(['string'], [updatedIpfsHash]);
@@ -483,35 +595,10 @@ describe('Membership', function () {
         ).revertedWith('GS013');
       });
 
-      it('should update the following mappings', async function () {
+      it('should return address zero when querying the previous token id', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
         const tokenData = abiCoder.encode(['string'], [ipfsHash]);
-
-        await signer.sendTransaction({
-          to: safe.getAddress(),
-          value: ethers.utils.parseEther('1.0'),
-        });
-
-        const enableModuleTxData = await safe.createTransaction([
-          {
-            to: safe.getAddress(),
-            value: '0',
-            data: encodeTransactionData({
-              fn: 'enableModule',
-              abi: ['function enableModule(address)'],
-              values: [membership.address],
-            }),
-          },
-        ]);
-
-        await safe.signTransaction(enableModuleTxData);
-
-        const executedEnableModuleTx = await safe.executeTransaction(
-          enableModuleTxData
-        );
-
-        await executedEnableModuleTx.transactionResponse?.wait();
 
         const txData = await safe.createTransaction([
           {
@@ -559,16 +646,212 @@ describe('Membership', function () {
         const noTokenDataResult = await membership.tokenData(1);
 
         expect(noTokenDataResult).to.be.equal('0x');
+      });
+
+      it('should return the updated token data when querying the updated token id', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+
+        const txData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'mint',
+              abi: ['function mint(address,bytes)'],
+              values: [recipient.address, tokenData],
+            }),
+          },
+        ]);
+
+        const executedTransaction = await safe.executeTransaction(txData, {
+          gasLimit: 350000,
+        });
+
+        await executedTransaction.transactionResponse?.wait();
+
+        const updatedIpfsHash = 'HASH';
+
+        const updatedTokenData = abiCoder.encode(['string'], [updatedIpfsHash]);
+
+        const updateTokenTxData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'updateToken',
+              abi: ['function updateToken(address,bytes)'],
+              values: [recipient.address, updatedTokenData],
+            }),
+          },
+        ]);
+
+        const executedUpdateTokenTx = await safe.executeTransaction(
+          updateTokenTxData,
+          {
+            gasLimit: 350000,
+          }
+        );
+
+        await executedUpdateTokenTx.transactionResponse?.wait();
 
         const tokenDataResult = await membership.tokenData(2);
 
         expect(tokenDataResult).to.be.equal(updatedTokenData);
+      });
+
+      it('should revert when querying the owner of the prevous token id', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+
+        const txData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'mint',
+              abi: ['function mint(address,bytes)'],
+              values: [recipient.address, tokenData],
+            }),
+          },
+        ]);
+
+        const executedTransaction = await safe.executeTransaction(txData, {
+          gasLimit: 350000,
+        });
+
+        await executedTransaction.transactionResponse?.wait();
+
+        const updatedIpfsHash = 'HASH';
+
+        const updatedTokenData = abiCoder.encode(['string'], [updatedIpfsHash]);
+
+        const updateTokenTxData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'updateToken',
+              abi: ['function updateToken(address,bytes)'],
+              values: [recipient.address, updatedTokenData],
+            }),
+          },
+        ]);
+
+        const executedUpdateTokenTx = await safe.executeTransaction(
+          updateTokenTxData,
+          {
+            gasLimit: 350000,
+          }
+        );
+
+        await executedUpdateTokenTx.transactionResponse?.wait();
 
         await expect(membership.ownerOf(1)).to.be.reverted;
+      });
+
+      it('should return the owner when querying the owner of the updated token id', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+
+        const txData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'mint',
+              abi: ['function mint(address,bytes)'],
+              values: [recipient.address, tokenData],
+            }),
+          },
+        ]);
+
+        const executedTransaction = await safe.executeTransaction(txData, {
+          gasLimit: 350000,
+        });
+
+        await executedTransaction.transactionResponse?.wait();
+
+        const updatedIpfsHash = 'HASH';
+
+        const updatedTokenData = abiCoder.encode(['string'], [updatedIpfsHash]);
+
+        const updateTokenTxData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'updateToken',
+              abi: ['function updateToken(address,bytes)'],
+              values: [recipient.address, updatedTokenData],
+            }),
+          },
+        ]);
+
+        const executedUpdateTokenTx = await safe.executeTransaction(
+          updateTokenTxData,
+          {
+            gasLimit: 350000,
+          }
+        );
+
+        await executedUpdateTokenTx.transactionResponse?.wait();
 
         const tokenOwnerResult = await membership.ownerOf(2);
 
         expect(tokenOwnerResult).to.be.equals(recipient.address);
+      });
+
+      it("should return the token id when querying the owner token using the owner's address", async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+
+        const txData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'mint',
+              abi: ['function mint(address,bytes)'],
+              values: [recipient.address, tokenData],
+            }),
+          },
+        ]);
+
+        const executedTransaction = await safe.executeTransaction(txData, {
+          gasLimit: 350000,
+        });
+
+        await executedTransaction.transactionResponse?.wait();
+
+        const updatedIpfsHash = 'HASH';
+
+        const updatedTokenData = abiCoder.encode(['string'], [updatedIpfsHash]);
+
+        const updateTokenTxData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'updateToken',
+              abi: ['function updateToken(address,bytes)'],
+              values: [recipient.address, updatedTokenData],
+            }),
+          },
+        ]);
+
+        const executedUpdateTokenTx = await safe.executeTransaction(
+          updateTokenTxData,
+          {
+            gasLimit: 350000,
+          }
+        );
+
+        await executedUpdateTokenTx.transactionResponse?.wait();
 
         const ownerTokenResult = await membership.ownerToken(recipient.address);
 
