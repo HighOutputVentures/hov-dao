@@ -423,9 +423,58 @@ describe('Membership', function () {
 
         const tokenData = abiCoder.encode(['string'], [ipfsHash]);
 
-        await expect(membership.updateToken(1, tokenData)).to.be.revertedWith(
-          'HOVX001'
+        await expect(
+          membership.updateToken(recipient.address, tokenData)
+        ).to.be.revertedWith('HOVX001');
+      });
+
+      it('should update the following mappings', async function () {
+        await signer.sendTransaction({
+          to: safe.getAddress(),
+          value: ethers.utils.parseEther('1.0'),
+        });
+
+        const enableModuleTxData = await safe.createTransaction([
+          {
+            to: safe.getAddress(),
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'enableModule',
+              abi: ['function enableModule(address)'],
+              values: [membership.address],
+            }),
+          },
+        ]);
+
+        await safe.signTransaction(enableModuleTxData);
+
+        const executedEnableModuleTx = await safe.executeTransaction(
+          enableModuleTxData
         );
+
+        await executedEnableModuleTx.transactionResponse?.wait();
+
+        const updatedIpfsHash = 'HASH';
+
+        const updatedTokenData = abiCoder.encode(['string'], [updatedIpfsHash]);
+
+        const updateTokenTxData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'updateToken',
+              abi: ['function updateToken(address,bytes)'],
+              values: [recipient.address, updatedTokenData],
+            }),
+          },
+        ]);
+
+        await expect(
+          safe.executeTransaction(updateTokenTxData, {
+            gasLimit: 350000,
+          })
+        ).revertedWith('GS013');
       });
 
       it('should update the following mappings', async function () {

@@ -81,6 +81,8 @@ contract Membership is ERC721 {
         public
         safeOnly
         returns(uint256) {
+        require(ownerToken[_owner] != 0, "owner have no token");
+
         uint256 tokenId = ownerToken[_owner];
 
         burn(tokenId);
