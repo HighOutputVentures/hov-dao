@@ -203,7 +203,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 250000,
+          gasLimit: 350000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -215,6 +215,10 @@ describe('Membership', function () {
         const ownerResult = await membership.ownerOf(1);
 
         expect(ownerResult).to.be.equals(recipient.address);
+
+        const ownerTokenResult = await membership.ownerToken(recipient.address);
+
+        expect(ownerTokenResult).to.be.equals(1);
       });
 
       it('should revert when the recipient already have an existing token', async function () {
@@ -260,7 +264,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 250000,
+          gasLimit: 350000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -279,7 +283,7 @@ describe('Membership', function () {
 
         await expect(
           safe.executeTransaction(badTxData, {
-            gasLimit: 250000,
+            gasLimit: 350000,
           })
         ).to.be.reverted;
       });
@@ -333,7 +337,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 250000,
+          gasLimit: 350000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -351,7 +355,7 @@ describe('Membership', function () {
         ]);
 
         const executedBurnTx = await safe.executeTransaction(burnTxData, {
-          gasLimit: 250000,
+          gasLimit: 350000,
         });
 
         await executedBurnTx.transactionResponse?.wait();
@@ -407,7 +411,7 @@ describe('Membership', function () {
 
         await expect(
           safe.executeTransaction(burnTxData, {
-            gasLimit: 250000,
+            gasLimit: 350000,
           })
         ).revertedWith('GS013');
       });
@@ -467,7 +471,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 250000,
+          gasLimit: 350000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -482,8 +486,8 @@ describe('Membership', function () {
             value: '0',
             data: encodeTransactionData({
               fn: 'updateToken',
-              abi: ['function updateToken(uint256,bytes)'],
-              values: [1, updatedTokenData],
+              abi: ['function updateToken(address,bytes)'],
+              values: [recipient.address, updatedTokenData],
             }),
           },
         ]);
@@ -491,7 +495,7 @@ describe('Membership', function () {
         const executedUpdateTokenTx = await safe.executeTransaction(
           updateTokenTxData,
           {
-            gasLimit: 250000,
+            gasLimit: 350000,
           }
         );
 
@@ -510,6 +514,10 @@ describe('Membership', function () {
         const tokenOwnerResult = await membership.ownerOf(2);
 
         expect(tokenOwnerResult).to.be.equals(recipient.address);
+
+        const ownerTokenResult = await membership.ownerToken(recipient.address);
+
+        expect(ownerTokenResult).to.be.equals(2);
       });
     });
   });

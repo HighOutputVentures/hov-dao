@@ -53,7 +53,7 @@ contract Membership is ERC721 {
         super._mint(_recipient, newItemId);
 
         tokenData[newItemId] = _tokenData;
-        // ownerToken[_recipient] = newItemId;
+        ownerToken[_recipient] = newItemId;
 
         return newItemId;
     }
@@ -77,16 +77,15 @@ contract Membership is ERC721 {
         delete ownerToken[owner];
     }
 
-    function updateToken(uint256 _tokenId, bytes memory _tokenData) 
+    function updateToken(address _owner, bytes memory _tokenData) 
         public
         safeOnly
         returns(uint256) {
-        address recipient = ownerOf(_tokenId);
+        uint256 tokenId = ownerToken[_owner];
 
-        _burn(_tokenId);
-        delete tokenData[_tokenId];
+        burn(tokenId);
 
-        return _hovMint(recipient, _tokenData);
+        return _hovMint(_owner, _tokenData);
     }
 
     function decodeTokenData(bytes memory _tokenData) public pure returns(string memory) {
