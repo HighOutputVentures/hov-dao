@@ -90,6 +90,12 @@ contract Membership is ERC721 {
         return _hovMint(_owner, _tokenData);
     }
 
+    function tokenURI(uint256 _tokenId) public override view returns(string memory) {
+        bytes memory data = tokenData[_tokenId];
+
+        return concat(data);
+    }
+
     function decodeTokenData(bytes memory _tokenData) public pure returns(string memory) {
         string memory first;
 
@@ -103,9 +109,9 @@ contract Membership is ERC721 {
 
         decodedStr = decodeTokenData(_tokenData);
 
-        string memory tokenURI = string(abi.encodePacked(IPFS_BASE_URL, decodedStr));
+        string memory uri = string(abi.encodePacked(IPFS_BASE_URL, decodedStr));
 
-        return tokenURI;
+        return uri;
     }
 
     function transferFrom(

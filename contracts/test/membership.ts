@@ -219,6 +219,12 @@ describe('Membership', function () {
         const ownerTokenResult = await membership.ownerToken(recipient.address);
 
         expect(ownerTokenResult).to.be.equals(1);
+
+        const tokenURI = await membership.tokenURI(1);
+
+        expect(tokenURI).to.be.equals(
+          'https://ipfs.io/ipfs/QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo'
+        );
       });
 
       it('should revert when the recipient already have an existing token', async function () {
