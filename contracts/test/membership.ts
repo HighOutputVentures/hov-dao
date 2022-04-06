@@ -85,6 +85,17 @@ describe('Membership', function () {
     let membership: Contract;
     let signer: SignerWithAddress;
     let recipient: SignerWithAddress;
+    let safe: Safe;
+
+    const encodeTransactionData = (args: {
+      fn: string;
+      abi: string[];
+      values: any[];
+    }) => {
+      const iFace = new ethers.utils.Interface(args.abi);
+
+      return iFace.encodeFunctionData(args.fn, args.values);
+    };
 
     beforeEach(async function () {
       [signer, recipient] = await ethers.getSigners();
@@ -110,6 +121,7 @@ describe('Membership', function () {
       await proxy.deployed();
 
       const copy = GnosisSafeMasterCopy.attach(proxy.address);
+
       await copy.setup(
         [signer.address],
         1,
@@ -128,7 +140,7 @@ describe('Membership', function () {
         safeAddress: proxy.address,
       });
 
-      this.safeSdk = safeSdk;
+      safe = safeSdk;
 
       const Membership = await ethers.getContractFactory('Membership', signer);
 
@@ -138,154 +150,366 @@ describe('Membership', function () {
     });
 
     describe('#mint', () => {
+      it('should be reverted when the sender is not the safe itself', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+
+        await expect(
+          membership.mint(recipient.address, tokenData)
+        ).to.be.revertedWith('HOVX001');
+      });
+
       it('should apply the correct mapping', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
         const tokenData = abiCoder.encode(['string'], [ipfsHash]);
 
-        const txHash = await membership.getTransactionHash(
-          recipient.address,
-          tokenData
+        await signer.sendTransaction({
+          to: safe.getAddress(),
+          value: ethers.utils.parseEther('1.0'),
+        });
+
+        const enableModuleTxData = await safe.createTransaction([
+          {
+            to: safe.getAddress(),
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'enableModule',
+              abi: ['function enableModule(address)'],
+              values: [membership.address],
+            }),
+          },
+        ]);
+
+        await safe.signTransaction(enableModuleTxData);
+
+        const executedEnableModuleTx = await safe.executeTransaction(
+          enableModuleTxData
         );
 
-        const firstSafeSignature = await this.safeSdk.signTransactionHash(
-          txHash
-        );
+        await executedEnableModuleTx.transactionResponse?.wait();
 
-        const signatureBytes = ethers.utils.solidityPack(
-          ['bytes'],
-          [firstSafeSignature.data]
-        );
+        const txData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'mint',
+              abi: ['function mint(address,bytes)'],
+              values: [recipient.address, tokenData],
+            }),
+          },
+        ]);
 
-        const mintTx = await membership.mint(
-          recipient.address,
-          tokenData,
-          signatureBytes
-        );
+        const executedTransaction = await safe.executeTransaction(txData, {
+          gasLimit: 250000,
+        });
 
-        await mintTx.wait();
+        await executedTransaction.transactionResponse?.wait();
 
         const tokenDataResult = await membership.tokenData(1);
 
         expect(tokenDataResult).to.be.equal(tokenData);
 
-        const tokenOwnerResult = await membership.tokenOwner(1);
+        const ownerResult = await membership.ownerOf(1);
 
-        expect(tokenOwnerResult).to.be.equals(recipient.address);
+        expect(ownerResult).to.be.equals(recipient.address);
+      });
+
+      it('should revert when the recipient already have an existing token', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+
+        await signer.sendTransaction({
+          to: safe.getAddress(),
+          value: ethers.utils.parseEther('1.0'),
+        });
+
+        const enableModuleTxData = await safe.createTransaction([
+          {
+            to: safe.getAddress(),
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'enableModule',
+              abi: ['function enableModule(address)'],
+              values: [membership.address],
+            }),
+          },
+        ]);
+
+        await safe.signTransaction(enableModuleTxData);
+
+        const executedEnableModuleTx = await safe.executeTransaction(
+          enableModuleTxData
+        );
+
+        await executedEnableModuleTx.transactionResponse?.wait();
+
+        const txData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'mint',
+              abi: ['function mint(address,bytes)'],
+              values: [recipient.address, tokenData],
+            }),
+          },
+        ]);
+
+        const executedTransaction = await safe.executeTransaction(txData, {
+          gasLimit: 250000,
+        });
+
+        await executedTransaction.transactionResponse?.wait();
+
+        const badTxData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'mint',
+              abi: ['function mint(address,bytes)'],
+              values: [recipient.address, tokenData],
+            }),
+          },
+        ]);
+
+        await expect(
+          safe.executeTransaction(badTxData, {
+            gasLimit: 250000,
+          })
+        ).to.be.reverted;
       });
     });
 
-    describe('#update', () => {
+    describe('#burn', () => {
+      it('should be reverted when the sender is not the safe itself', async function () {
+        await expect(membership.burn(1)).to.be.revertedWith('HOVX001');
+      });
+
       it('should update the following mappings', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
         const tokenData = abiCoder.encode(['string'], [ipfsHash]);
 
-        const txHash = await membership.getTransactionHash(
-          recipient.address,
-          tokenData
+        await signer.sendTransaction({
+          to: safe.getAddress(),
+          value: ethers.utils.parseEther('1.0'),
+        });
+
+        const enableModuleTxData = await safe.createTransaction([
+          {
+            to: safe.getAddress(),
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'enableModule',
+              abi: ['function enableModule(address)'],
+              values: [membership.address],
+            }),
+          },
+        ]);
+
+        await safe.signTransaction(enableModuleTxData);
+
+        const executedEnableModuleTx = await safe.executeTransaction(
+          enableModuleTxData
         );
 
-        const firstSafeSignature = await this.safeSdk.signTransactionHash(
-          txHash
+        await executedEnableModuleTx.transactionResponse?.wait();
+
+        const txData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'mint',
+              abi: ['function mint(address,bytes)'],
+              values: [recipient.address, tokenData],
+            }),
+          },
+        ]);
+
+        const executedTransaction = await safe.executeTransaction(txData, {
+          gasLimit: 250000,
+        });
+
+        await executedTransaction.transactionResponse?.wait();
+
+        const burnTxData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'burn',
+              abi: ['function burn(uint256)'],
+              values: [1],
+            }),
+          },
+        ]);
+
+        const executedBurnTx = await safe.executeTransaction(burnTxData, {
+          gasLimit: 250000,
+        });
+
+        await executedBurnTx.transactionResponse?.wait();
+
+        await expect(membership.ownerOf(1)).to.be.reverted;
+
+        const data = await membership.tokenData(1);
+
+        expect(data).to.be.equals('0x');
+
+        const token = await membership.ownerToken(recipient.address);
+
+        expect(token).to.be.equals(0);
+      });
+
+      it('should revert when burning non-existent token', async function () {
+        await signer.sendTransaction({
+          to: safe.getAddress(),
+          value: ethers.utils.parseEther('1.0'),
+        });
+
+        const enableModuleTxData = await safe.createTransaction([
+          {
+            to: safe.getAddress(),
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'enableModule',
+              abi: ['function enableModule(address)'],
+              values: [membership.address],
+            }),
+          },
+        ]);
+
+        await safe.signTransaction(enableModuleTxData);
+
+        const executedEnableModuleTx = await safe.executeTransaction(
+          enableModuleTxData
         );
 
-        const signatureBytes = ethers.utils.solidityPack(
-          ['bytes'],
-          [firstSafeSignature.data]
+        await executedEnableModuleTx.transactionResponse?.wait();
+
+        const burnTxData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'burn',
+              abi: ['function burn(uint256)'],
+              values: [1],
+            }),
+          },
+        ]);
+
+        await expect(
+          safe.executeTransaction(burnTxData, {
+            gasLimit: 250000,
+          })
+        ).revertedWith('GS013');
+      });
+    });
+
+    describe('#updateToken', () => {
+      it('should be reverted when the sender is not the safe itself', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+
+        await expect(membership.updateToken(1, tokenData)).to.be.revertedWith(
+          'HOVX001'
+        );
+      });
+
+      it('should update the following mappings', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+
+        await signer.sendTransaction({
+          to: safe.getAddress(),
+          value: ethers.utils.parseEther('1.0'),
+        });
+
+        const enableModuleTxData = await safe.createTransaction([
+          {
+            to: safe.getAddress(),
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'enableModule',
+              abi: ['function enableModule(address)'],
+              values: [membership.address],
+            }),
+          },
+        ]);
+
+        await safe.signTransaction(enableModuleTxData);
+
+        const executedEnableModuleTx = await safe.executeTransaction(
+          enableModuleTxData
         );
 
-        const mintTx = await membership.mint(
-          recipient.address,
-          tokenData,
-          signatureBytes
-        );
+        await executedEnableModuleTx.transactionResponse?.wait();
 
-        await mintTx.wait();
+        const txData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'mint',
+              abi: ['function mint(address,bytes)'],
+              values: [recipient.address, tokenData],
+            }),
+          },
+        ]);
+
+        const executedTransaction = await safe.executeTransaction(txData, {
+          gasLimit: 250000,
+        });
+
+        await executedTransaction.transactionResponse?.wait();
 
         const updatedIpfsHash = 'HASH';
 
         const updatedTokenData = abiCoder.encode(['string'], [updatedIpfsHash]);
 
-        const updateTokenTxHash =
-          await membership.getTransactionUpdateTokenHash(1, updatedTokenData);
+        const updateTokenTxData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'updateToken',
+              abi: ['function updateToken(uint256,bytes)'],
+              values: [1, updatedTokenData],
+            }),
+          },
+        ]);
 
-        const firstUpdateTokenSignature =
-          await this.safeSdk.signTransactionHash(updateTokenTxHash);
-
-        const updateSignatureBytes = ethers.utils.solidityPack(
-          ['bytes'],
-          [firstUpdateTokenSignature.data]
+        const executedUpdateTokenTx = await safe.executeTransaction(
+          updateTokenTxData,
+          {
+            gasLimit: 250000,
+          }
         );
 
-        const updateTokenTx = await membership.updateToken(
-          1,
-          updatedTokenData,
-          updateSignatureBytes
-        );
+        await executedUpdateTokenTx.transactionResponse?.wait();
 
-        await updateTokenTx.wait();
+        const noTokenDataResult = await membership.tokenData(1);
 
-        const tokenOwnerResult = await membership.tokenOwner(1);
+        expect(noTokenDataResult).to.be.equal('0x');
 
-        expect(tokenOwnerResult).to.be.equals(recipient.address);
-
-        const tokenDataResult = await membership.tokenData(1);
+        const tokenDataResult = await membership.tokenData(2);
 
         expect(tokenDataResult).to.be.equal(updatedTokenData);
-      });
-    });
 
-    describe('#burn', () => {
-      it('should update the following mappings', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        await expect(membership.ownerOf(1)).to.be.reverted;
 
-        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+        const tokenOwnerResult = await membership.ownerOf(2);
 
-        const txHash = await membership.getTransactionHash(
-          recipient.address,
-          tokenData
-        );
-
-        const firstSafeSignature = await this.safeSdk.signTransactionHash(
-          txHash
-        );
-
-        const signatureBytes = ethers.utils.solidityPack(
-          ['bytes'],
-          [firstSafeSignature.data]
-        );
-
-        const mintTx = await membership.mint(
-          recipient.address,
-          tokenData,
-          signatureBytes
-        );
-
-        await mintTx.wait();
-
-        const burnTxHash = await membership.getTransactionBurnHash(1);
-
-        const firstBurnSignature = await this.safeSdk.signTransactionHash(
-          burnTxHash
-        );
-
-        const burnSignatureBytes = ethers.utils.solidityPack(
-          ['bytes'],
-          [firstBurnSignature.data]
-        );
-
-        const burnTx = await membership.burn(1, burnSignatureBytes);
-
-        await burnTx.wait();
-
-        const owner = await membership.tokenOwner(1);
-
-        expect(owner).to.be.equals(AddressZero);
-
-        const data = await membership.tokenData(1);
-
-        expect(data).to.be.equals('0x');
+        expect(tokenOwnerResult).to.be.equals(recipient.address);
       });
     });
   });
