@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-
 import "./IGnosisSafe.sol";
 
 contract Membership is ERC721 {
@@ -15,53 +14,76 @@ contract Membership is ERC721 {
     
     IGnosisSafe public safe;
 
-    mapping(uint256 => address) public tokenOwner;
-
+    // Mapping from token ID to data
     mapping(uint256 => bytes) public tokenData;
+
+    // Mapping from owner address to token ID
+    mapping(address => uint256) public tokens;
 
     modifier disabledTransferAndApprove() {
         require(false, "disabled!");
-
         _;
     }
+
+    modifier onlySafe {
+      require(msg.sender == address(safe), "not safe");
+      _;
+   }
 
     constructor(IGnosisSafe _safe) ERC721("HOVX Pass", "HOVX") {
         safe = _safe;
     }
 
-    function mint(address _recipient, bytes memory _tokenData)
-        public
+    function _mintL(address _recipient, bytes memory _tokenData)
+        private
         returns (uint256)
     {
+        require(tokens[_recipient] == 0, "recipient has existing token");
+
         _tokenIds.increment();
 
         uint256 newItemId = _tokenIds.current();
         
+        tokenData[newItemId] = _tokenData;
+        tokens[_recipient] = newItemId;
+
         _mint(_recipient, newItemId);
 
-        tokenOwner[newItemId] = _recipient;
-        tokenData[newItemId] = _tokenData;
+        return newItemId;
+    } 
 
-        emit Transfer(_recipient, address(safe), newItemId);
+    function mint(address _recipient, bytes memory _tokenData)
+        public
+        returns (uint256)
+    {
+        uint256 newItemId = _mintL(_recipient, _tokenData);        
 
         return newItemId;
     }
 
-    function updateToken(uint256 _tokenId, bytes memory _tokenData) public returns(bytes memory) {
-        tokenData[_tokenId] = _tokenData;
+    function _burnL(uint256 _tokenId) private {
+        require(_exists(_tokenId), "cannot burn nonexistent token");
 
-        return _tokenData;
+        address owner = ownerOf(_tokenId);
+
+        delete tokenData[_tokenId];
+        delete tokens[owner];
+
+        _burn(_tokenId);
     }
 
     function burn(uint256 _tokenId) public virtual {
-        super._burn(_tokenId);
+        _burnL(_tokenId);
+    }
 
-        address foundTokenOwner = tokenOwner[_tokenId];
+    function updateTokenData(address _owner, bytes memory _tokenData) public returns (uint256) {
+        uint256 tokenId = tokens[_owner];
 
-        delete tokenOwner[_tokenId];
-        delete tokenData[_tokenId];
+        _burnL(tokenId);
 
-        emit Transfer(address(safe), foundTokenOwner, _tokenId);
+        uint256 newTokenId = _mintL(_owner, _tokenData);
+
+        return newTokenId;
     }
     
     function encodeTransactionData(
