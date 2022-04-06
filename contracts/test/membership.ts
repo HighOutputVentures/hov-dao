@@ -285,7 +285,7 @@ describe('Membership', function () {
           safe.executeTransaction(badTxData, {
             gasLimit: 350000,
           })
-        ).to.be.reverted;
+        ).to.be.revertedWith('GS013');
       });
     });
 
@@ -428,7 +428,7 @@ describe('Membership', function () {
         ).to.be.revertedWith('HOVX001');
       });
 
-      it('should update the following mappings', async function () {
+      it('should throw an error when the owner have no tokens at all', async function () {
         await signer.sendTransaction({
           to: safe.getAddress(),
           value: ethers.utils.parseEther('1.0'),
