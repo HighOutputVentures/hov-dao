@@ -701,7 +701,7 @@ describe('Membership', function () {
         expect(tokenDataResult).to.be.equal(updatedTokenData);
       });
 
-      it('should revert when querying the owner of the prevous token id', async function () {
+      it('should revert when querying the owner of the previous token id', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
         const tokenData = abiCoder.encode(['string'], [ipfsHash]);
