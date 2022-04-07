@@ -96,20 +96,27 @@ contract Membership is ERC721 {
         return concat(data);
     }
 
-    function decodeTokenData(bytes memory _tokenData) public pure returns(string memory) {
-        string memory first;
+    function tokenPower(address _owner) public view returns(bytes1) {
+        uint256 tokenId = ownerToken[_owner];
 
-        (first) = abi.decode(_tokenData, (string));
+        bytes memory data = tokenData[tokenId];
+        
+        (, bytes1 power) = decodeTokenData(data);
 
-        return first;
+        return power;
+    }
+
+    function decodeTokenData(bytes memory _tokenData) 
+        public 
+        pure 
+        returns(string memory ipfsHash, bytes1 power) {
+        (ipfsHash, power) = abi.decode(_tokenData, (string, bytes1));
     }
 
     function concat(bytes memory _tokenData) public pure returns(string memory) {
-        string memory decodedStr;
+        (string memory ipfsHash,) = decodeTokenData(_tokenData);
 
-        decodedStr = decodeTokenData(_tokenData);
-
-        string memory uri = string(abi.encodePacked(IPFS_BASE_URL, decodedStr));
+        string memory uri = string(abi.encodePacked(IPFS_BASE_URL, ipfsHash));
 
         return uri;
     }

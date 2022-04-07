@@ -3,8 +3,11 @@ pragma solidity ^0.8.0;
 
 contract TestSingleton {
     address _singleton;
+
     address public creator;
+
     bool public isInitialized;
+
     constructor() payable {
         creator = msg.sender;
     }
