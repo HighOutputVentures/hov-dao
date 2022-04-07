@@ -4,6 +4,7 @@
   "description": "HOV DAO",
   "main": "index.js",
   "scripts": {
+    "compile": "hardhat compile",
     "test": "hardhat test"
   },
   "author": "",
