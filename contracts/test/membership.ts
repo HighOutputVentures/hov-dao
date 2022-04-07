@@ -81,7 +81,138 @@ describe('Membership', function () {
     });
   });
 
-  describe('Usable methods', () => {
+  describe('Usable methods: Public', () => {
+    let membership: Contract;
+    let signer: SignerWithAddress;
+    let recipient: SignerWithAddress;
+    let safe: Safe;
+
+    const encodeTransactionData = (args: {
+      fn: string;
+      abi: string[];
+      values: any[];
+    }) => {
+      const iFace = new ethers.utils.Interface(args.abi);
+
+      return iFace.encodeFunctionData(args.fn, args.values);
+    };
+
+    beforeEach(async function () {
+      [signer, recipient] = await ethers.getSigners();
+
+      const ethAdapter = new EthersAdapter({
+        ethers,
+        signer,
+      });
+
+      const GnosisSafeMasterCopy = await ethers.getContractFactory(
+        'GnosisSafe',
+        signer
+      );
+
+      const gnosisSafeMasterCopy = await GnosisSafeMasterCopy.deploy();
+
+      const GnosisSafeProxy = await ethers.getContractFactory(
+        'GnosisSafeProxy',
+        signer
+      );
+      const proxy = await GnosisSafeProxy.deploy(gnosisSafeMasterCopy.address);
+
+      await proxy.deployed();
+
+      const copy = GnosisSafeMasterCopy.attach(proxy.address);
+
+      await copy.setup(
+        [signer.address],
+        1,
+        AddressZero,
+        '0x',
+        AddressZero,
+        AddressZero,
+        0,
+        AddressZero
+      );
+
+      this.gnosisSafe = copy;
+
+      const safeSdk: Safe = await Safe.create({
+        ethAdapter,
+        safeAddress: proxy.address,
+      });
+
+      safe = safeSdk;
+
+      const Membership = await ethers.getContractFactory('Membership', signer);
+
+      membership = await Membership.deploy(safeSdk.getAddress());
+
+      await membership.deployed();
+    });
+
+    describe('#tokenURI', () => {
+      it('should have the correct decoded tokenURI', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string', 'bytes1'], [ipfsHash, 1]);
+
+        const txData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'mint',
+              abi: ['function mint(address,bytes)'],
+              values: [recipient.address, tokenData],
+            }),
+          },
+        ]);
+
+        const executedTransaction = await safe.executeTransaction(txData, {
+          gasLimit: 350000,
+        });
+
+        await executedTransaction.transactionResponse?.wait();
+
+        const tokenURI = await membership.tokenURI(1);
+
+        expect(tokenURI).to.be.equals(
+          'https://ipfs.io/ipfs/QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo'
+        );
+      });
+    });
+
+    describe('#tokenPower', () => {
+      it('should have the correct decoded tokenPower', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string', 'bytes1'], [ipfsHash, 1]);
+
+        const txData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'mint',
+              abi: ['function mint(address,bytes)'],
+              values: [recipient.address, tokenData],
+            }),
+          },
+        ]);
+
+        const executedTransaction = await safe.executeTransaction(txData, {
+          gasLimit: 350000,
+        });
+
+        await executedTransaction.transactionResponse?.wait();
+
+        const tokenPower = await membership.tokenPower(recipient.address);
+
+        expect(tokenPower).to.be.equals('0x01');
+      });
+    });
+  });
+
+  describe('Usable methods: Safe only', () => {
     let membership: Contract;
     let signer: SignerWithAddress;
     let recipient: SignerWithAddress;
@@ -316,7 +447,7 @@ describe('Membership', function () {
       it('should have the correct decoded tokenURI', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+        const tokenData = abiCoder.encode(['string', 'bytes1'], [ipfsHash, 1]);
 
         const txData = await safe.createTransaction([
           {
@@ -341,6 +472,34 @@ describe('Membership', function () {
         expect(tokenURI).to.be.equals(
           'https://ipfs.io/ipfs/QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo'
         );
+      });
+
+      it('should have the correct decoded tokenPower', async function () {
+        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+
+        const tokenData = abiCoder.encode(['string', 'bytes1'], [ipfsHash, 1]);
+
+        const txData = await safe.createTransaction([
+          {
+            to: membership.address,
+            value: '0',
+            data: encodeTransactionData({
+              fn: 'mint',
+              abi: ['function mint(address,bytes)'],
+              values: [recipient.address, tokenData],
+            }),
+          },
+        ]);
+
+        const executedTransaction = await safe.executeTransaction(txData, {
+          gasLimit: 350000,
+        });
+
+        await executedTransaction.transactionResponse?.wait();
+
+        const tokenPower = await membership.tokenPower(recipient.address);
+
+        expect(tokenPower).to.be.equals('0x01');
       });
     });
 
