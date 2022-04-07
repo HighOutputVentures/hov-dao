@@ -40,7 +40,7 @@ contract Membership is ERC721 {
         _;
     }
 
-    constructor(IGnosisSafe _safe) ERC721("HOV Pass", "HOVX") {
+    constructor(IGnosisSafe _safe) ERC721("HOVX Pass", "HOVX") {
         safe = _safe;
     }
 

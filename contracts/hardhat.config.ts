@@ -43,9 +43,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     rinkeby: {
-      url:
-        process.env.ROPSTEN_URL ||
-        `${ALCHEMY_BASE_URL}/${ALCHEMY_API_VERSION}/${ALCHEMY_KEY}`,
+      url: process.env.RINKEBY_URL,
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
