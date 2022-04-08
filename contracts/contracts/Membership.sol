@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "hardhat/console.sol";
-
 import "./IGnosisSafe.sol";
 
 contract Membership is ERC721 {
@@ -12,7 +11,7 @@ contract Membership is ERC721 {
     
     Counters.Counter private _tokenIds;
 
-    string public constant IPFS_BASE_URL = "https://ipfs.io/ipfs/";
+    string public constant IPFS_BASE_URL = "https://ipfs.fleek.co/ipfs/";
 
     string public constant NAME = "Membership";
 
@@ -58,7 +57,7 @@ contract Membership is ERC721 {
         return newItemId;
     }
 
-    function mint(address _recipient, bytes memory _tokenData) 
+    function mint(address _recipient, bytes memory _tokenData)
         public
         safeOnly
         returns(uint256)
@@ -96,27 +95,27 @@ contract Membership is ERC721 {
         return concat(data);
     }
 
-    function tokenPower(address _owner) public view returns(bytes1) {
+    function tokenPower(address _owner) public view returns(uint8) {
         uint256 tokenId = ownerToken[_owner];
 
         bytes memory data = tokenData[tokenId];
-        
+
         (, bytes1 power) = decodeTokenData(data);
 
-        return power;
+        return uint8(power);
     }
 
     function decodeTokenData(bytes memory _tokenData) 
         public 
         pure 
-        returns(string memory ipfsHash, bytes1 power) {
-        (ipfsHash, power) = abi.decode(_tokenData, (string, bytes1));
+        returns(string memory cid, bytes1 power) {
+        (cid, power) = abi.decode(_tokenData, (string, bytes1));
     }
 
     function concat(bytes memory _tokenData) public pure returns(string memory) {
-        (string memory ipfsHash,) = decodeTokenData(_tokenData);
+        (string memory cid,) = decodeTokenData(_tokenData);
 
-        string memory uri = string(abi.encodePacked(IPFS_BASE_URL, ipfsHash));
+        string memory uri = string(abi.encodePacked(IPFS_BASE_URL, cid));
 
         return uri;
     }

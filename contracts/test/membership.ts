@@ -151,9 +151,9 @@ describe('Membership', function () {
 
     describe('#tokenURI', () => {
       it('should have the correct decoded tokenURI', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const cid = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string', 'bytes1'], [ipfsHash, 1]);
+        const tokenData = abiCoder.encode(['string', 'bytes1'], [cid, 1]);
 
         const txData = await safe.createTransaction([
           {
@@ -175,17 +175,15 @@ describe('Membership', function () {
 
         const tokenURI = await membership.tokenURI(1);
 
-        expect(tokenURI).to.be.equals(
-          'https://ipfs.io/ipfs/QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo'
-        );
+        expect(tokenURI).to.be.equals(`https://ipfs.io/ipfs/${cid}`);
       });
     });
 
     describe('#tokenPower', () => {
       it('should have the correct decoded tokenPower', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const cid = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string', 'bytes1'], [ipfsHash, 1]);
+        const tokenData = abiCoder.encode(['string', 'bytes1'], [cid, 1]);
 
         const txData = await safe.createTransaction([
           {
@@ -207,7 +205,7 @@ describe('Membership', function () {
 
         const tokenPower = await membership.tokenPower(recipient.address);
 
-        expect(tokenPower).to.be.equals('0x01');
+        expect(tokenPower).to.be.equals(1);
       });
     });
   });
@@ -499,7 +497,7 @@ describe('Membership', function () {
 
         const tokenPower = await membership.tokenPower(recipient.address);
 
-        expect(tokenPower).to.be.equals('0x01');
+        expect(tokenPower).to.be.equals(1);
       });
     });
 

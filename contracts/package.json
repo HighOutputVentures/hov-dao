@@ -51,7 +51,10 @@
     "@gnosis.pm/safe-core-sdk": "^2.1.0",
     "@gnosis.pm/safe-ethers-lib": "^1.1.0",
     "@openzeppelin/contracts": "^4.5.0",
-    "hardhat-abi-exporter": "^2.8.0"
+    "@types/ramda": "^0.28.7",
+    "hardhat-abi-exporter": "^2.8.0",
+    "ramda": "^0.28.0",
+    "solidity-bytes-utils": "^0.8.0"
   },
   "engines": {
     "node": ">=16.0.0"
