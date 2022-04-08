@@ -175,7 +175,7 @@ describe('Membership', function () {
 
         const tokenURI = await membership.tokenURI(1);
 
-        expect(tokenURI).to.be.equals(`https://ipfs.io/ipfs/${cid}`);
+        expect(tokenURI).to.be.equals(`https://ipfs.fleek.co/ipfs/${cid}`);
       });
     });
 
@@ -206,6 +206,12 @@ describe('Membership', function () {
         const tokenPower = await membership.tokenPower(recipient.address);
 
         expect(tokenPower).to.be.equals(1);
+      });
+
+      it('should return 0 if the owner have no tokens at all', async function () {
+        const tokenPower = await membership.tokenPower(recipient.address);
+
+        expect(tokenPower).to.be.equals(0);
       });
     });
   });
@@ -468,7 +474,7 @@ describe('Membership', function () {
         const tokenURI = await membership.tokenURI(1);
 
         expect(tokenURI).to.be.equals(
-          'https://ipfs.io/ipfs/QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo'
+          'https://ipfs.fleek.co/ipfs/QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo'
         );
       });
 
