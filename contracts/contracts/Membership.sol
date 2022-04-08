@@ -96,6 +96,10 @@ contract Membership is ERC721 {
     }
 
     function tokenPower(address _owner) public view returns(uint8) {
+        if (ownerToken[_owner] < 1) {
+            return 0;
+        }
+
         uint256 tokenId = ownerToken[_owner];
 
         bytes memory data = tokenData[tokenId];
