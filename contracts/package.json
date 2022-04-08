@@ -4,8 +4,8 @@
   "description": "HOV DAO",
   "main": "index.js",
   "scripts": {
-    "compile": "hardhat compile",
-    "test": "hardhat test"
+    "compile": "env $(cat .env.secret) env $(cat .env) hardhat compile",
+    "test": "env $(cat .env.secret) env $(cat .env) hardhat test"
   },
   "author": "",
   "license": "ISC",
