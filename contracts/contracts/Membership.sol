@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "hardhat/console.sol";
 import "./IGnosisSafe.sol";
 
-contract Membership is ERC721 {
+contract Membership is ERC721Enumerable {
     using Counters for Counters.Counter;
     
     Counters.Counter private _tokenIds;
@@ -128,20 +130,20 @@ contract Membership is ERC721 {
         address,
         address,
         uint256 _tokenId
-    ) public virtual override disabledTransferAndApprove() {}
+    ) public virtual override(ERC721) disabledTransferAndApprove() {}
 
     function safeTransferFrom(
         address,
         address,
         uint256 _tokenId
-    ) public virtual override disabledTransferAndApprove() {}
+    ) public virtual override(ERC721) disabledTransferAndApprove() {}
 
     function safeTransferFrom(
         address,
         address,
         uint256 _tokenId,
         bytes memory _data
-    ) public virtual override disabledTransferAndApprove() {}
+    ) public virtual override(ERC721) disabledTransferAndApprove() {}
 
-    function approve(address, uint256 _tokenId) public virtual override disabledTransferAndApprove() {}
+    function approve(address, uint256 _tokenId) public virtual override(ERC721) disabledTransferAndApprove() {}
 }
