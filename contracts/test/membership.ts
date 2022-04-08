@@ -168,7 +168,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -198,7 +198,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -340,7 +340,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -359,7 +359,7 @@ describe('Membership', function () {
 
         await expect(
           safe.executeTransaction(badTxData, {
-            gasLimit: 350000,
+            gasLimit: 400_000,
           })
         ).to.be.revertedWith('GS013');
       });
@@ -382,7 +382,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -410,7 +410,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -438,7 +438,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -466,7 +466,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -496,7 +496,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -554,7 +554,7 @@ describe('Membership', function () {
 
         await expect(
           safe.executeTransaction(burnTxData, {
-            gasLimit: 350000,
+            gasLimit: 400_000,
           })
         ).revertedWith('GS013');
       });
@@ -577,7 +577,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -595,7 +595,7 @@ describe('Membership', function () {
         ]);
 
         const executedBurnTx = await safe.executeTransaction(burnTxData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedBurnTx.transactionResponse?.wait();
@@ -621,7 +621,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -639,7 +639,7 @@ describe('Membership', function () {
         ]);
 
         const executedBurnTx = await safe.executeTransaction(burnTxData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedBurnTx.transactionResponse?.wait();
@@ -667,7 +667,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -685,7 +685,7 @@ describe('Membership', function () {
         ]);
 
         const executedBurnTx = await safe.executeTransaction(burnTxData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedBurnTx.transactionResponse?.wait();
@@ -753,7 +753,7 @@ describe('Membership', function () {
 
         await expect(
           safe.executeTransaction(updateTokenTxData, {
-            gasLimit: 350000,
+            gasLimit: 400_000,
           })
         ).revertedWith('GS013');
       });
@@ -776,7 +776,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -800,7 +800,7 @@ describe('Membership', function () {
         const executedUpdateTokenTx = await safe.executeTransaction(
           updateTokenTxData,
           {
-            gasLimit: 350000,
+            gasLimit: 400_000,
           }
         );
 
@@ -829,7 +829,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -853,7 +853,7 @@ describe('Membership', function () {
         const executedUpdateTokenTx = await safe.executeTransaction(
           updateTokenTxData,
           {
-            gasLimit: 350000,
+            gasLimit: 400_000,
           }
         );
 
@@ -882,7 +882,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -906,7 +906,7 @@ describe('Membership', function () {
         const executedUpdateTokenTx = await safe.executeTransaction(
           updateTokenTxData,
           {
-            gasLimit: 350000,
+            gasLimit: 400_000,
           }
         );
 
@@ -933,7 +933,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -957,7 +957,7 @@ describe('Membership', function () {
         const executedUpdateTokenTx = await safe.executeTransaction(
           updateTokenTxData,
           {
-            gasLimit: 350000,
+            gasLimit: 400_000,
           }
         );
 
@@ -986,7 +986,7 @@ describe('Membership', function () {
         ]);
 
         const executedTransaction = await safe.executeTransaction(txData, {
-          gasLimit: 350000,
+          gasLimit: 400_000,
         });
 
         await executedTransaction.transactionResponse?.wait();
@@ -1010,7 +1010,7 @@ describe('Membership', function () {
         const executedUpdateTokenTx = await safe.executeTransaction(
           updateTokenTxData,
           {
-            gasLimit: 350000,
+            gasLimit: 400_000,
           }
         );
 
