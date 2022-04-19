@@ -5,12 +5,14 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "solidity-bytes-utils/contracts/BytesLib.sol";
 import "hardhat/console.sol";
 import "./IGnosisSafe.sol";
 
 contract Membership is ERC721Enumerable {
     using Counters for Counters.Counter;
-    
+    using BytesLib for bytes;
+
     Counters.Counter private _tokenIds;
 
     string public constant IPFS_BASE_URL = "https://ipfs.fleek.co/ipfs/";
@@ -94,7 +96,15 @@ contract Membership is ERC721Enumerable {
     function tokenURI(uint256 _tokenId) public override view returns(string memory) {
         bytes memory data = tokenData[_tokenId];
 
-        return concat(data);
+        return _concat(data);
+    }
+
+    function _concat(bytes memory _tokenData) private pure returns(string memory) {
+        (string memory cid,) = _decodeTokenData(_tokenData);
+
+        string memory uri = string(abi.encodePacked(IPFS_BASE_URL, cid));
+
+        return uri;
     }
 
     function tokenPower(address _owner) public view returns(uint8) {
@@ -106,24 +116,18 @@ contract Membership is ERC721Enumerable {
 
         bytes memory data = tokenData[tokenId];
 
-        (, bytes1 power) = decodeTokenData(data);
+        (, bytes1 power) = _decodeTokenData(data);
 
         return uint8(power);
     }
 
-    function decodeTokenData(bytes memory _tokenData) 
-        public 
-        pure 
+    function _decodeTokenData(bytes memory _tokenData) 
+        private 
+        pure
         returns(string memory cid, bytes1 power) {
-        (cid, power) = abi.decode(_tokenData, (string, bytes1));
-    }
+        cid = string(_tokenData.slice(0, 46));
 
-    function concat(bytes memory _tokenData) public pure returns(string memory) {
-        (string memory cid,) = decodeTokenData(_tokenData);
-
-        string memory uri = string(abi.encodePacked(IPFS_BASE_URL, cid));
-
-        return uri;
+        power = bytes1(_tokenData.slice(46, 1));
     }
 
     function transferFrom(
