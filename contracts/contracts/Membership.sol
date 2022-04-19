@@ -99,7 +99,7 @@ contract Membership is ERC721Enumerable {
         return _concat(data);
     }
 
-    function _concat(bytes memory _tokenData) private view returns(string memory) {
+    function _concat(bytes memory _tokenData) private pure returns(string memory) {
         (string memory cid,) = _decodeTokenData(_tokenData);
 
         string memory uri = string(abi.encodePacked(IPFS_BASE_URL, cid));
@@ -123,7 +123,7 @@ contract Membership is ERC721Enumerable {
 
     function _decodeTokenData(bytes memory _tokenData) 
         private 
-        view 
+        pure
         returns(string memory cid, bytes1 power) {
         cid = string(_tokenData.slice(0, 46));
 
