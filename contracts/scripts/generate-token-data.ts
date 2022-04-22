@@ -1,7 +1,4 @@
 import R from 'ramda';
-import { ethers } from 'hardhat';
-
-const coder = new ethers.utils.AbiCoder();
 
 async function main() {
   const types = [
@@ -34,7 +31,12 @@ async function main() {
 
   console.log(
     R.map(({ name, cid, power }) => {
-      return `${name}: ${coder.encode(['string', 'bytes1'], [cid, power])}`;
+      const tokenData = Buffer.concat([
+        Buffer.from(cid, 'ascii'),
+        Buffer.from([power]),
+      ]);
+
+      return `${name}: 0x${tokenData.toString('hex')}`;
     }, types).join('\n')
   );
 }
