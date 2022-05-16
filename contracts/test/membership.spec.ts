@@ -153,7 +153,10 @@ describe('Membership', function () {
       it('should have the correct decoded tokenURI', async function () {
         const cid = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string', 'bytes1'], [cid, 1]);
+        const tokenData = Buffer.concat([
+          Buffer.from(cid, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         const txData = await safe.createTransaction([
           {
@@ -182,8 +185,12 @@ describe('Membership', function () {
     describe('#tokenPower', () => {
       it('should have the correct decoded tokenPower', async function () {
         const cid = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const power = 1;
 
-        const tokenData = abiCoder.encode(['string', 'bytes1'], [cid, 1]);
+        const tokenData = Buffer.concat([
+          Buffer.from(cid, 'ascii'),
+          Buffer.from([power]),
+        ]);
 
         const txData = await safe.createTransaction([
           {
@@ -315,7 +322,10 @@ describe('Membership', function () {
       it('should be reverted when the sender is not the safe itself', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+        const tokenData = Buffer.concat([
+          Buffer.from(ipfsHash, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         await expect(
           membership.mint(recipient.address, tokenData)
@@ -325,7 +335,10 @@ describe('Membership', function () {
       it('should revert when the recipient already have an existing token', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+        const tokenData = Buffer.concat([
+          Buffer.from(ipfsHash, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         const txData = await safe.createTransaction([
           {
@@ -367,7 +380,10 @@ describe('Membership', function () {
       it('should have correct tokenData given the tokenId', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+        const tokenData = Buffer.concat([
+          Buffer.from(ipfsHash, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         const txData = await safe.createTransaction([
           {
@@ -389,13 +405,16 @@ describe('Membership', function () {
 
         const tokenDataResult = await membership.tokenData(1);
 
-        expect(tokenDataResult).to.be.equal(tokenData);
+        expect(tokenDataResult).to.be.equal(`0x${tokenData.toString('hex')}`);
       });
 
       it('should have the correct owner given the tokenId', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+        const tokenData = Buffer.concat([
+          Buffer.from(ipfsHash, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         const txData = await safe.createTransaction([
           {
@@ -423,7 +442,10 @@ describe('Membership', function () {
       it('should have the correct token id given the owner', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+        const tokenData = Buffer.concat([
+          Buffer.from(ipfsHash, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         const txData = await safe.createTransaction([
           {
@@ -451,7 +473,10 @@ describe('Membership', function () {
       it('should have the correct decoded tokenURI', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string', 'bytes1'], [ipfsHash, 1]);
+        const tokenData = Buffer.concat([
+          Buffer.from(ipfsHash, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         const txData = await safe.createTransaction([
           {
@@ -481,7 +506,10 @@ describe('Membership', function () {
       it('should have the correct decoded tokenPower', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string', 'bytes1'], [ipfsHash, 1]);
+        const tokenData = Buffer.concat([
+          Buffer.from(ipfsHash, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         const txData = await safe.createTransaction([
           {
@@ -562,7 +590,10 @@ describe('Membership', function () {
       it('should revert when getting the owner of the burned token id', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+        const tokenData = Buffer.concat([
+          Buffer.from(ipfsHash, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         const txData = await safe.createTransaction([
           {
@@ -606,7 +637,10 @@ describe('Membership', function () {
       it('should the tokenData be address zero when getting the burned token id', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+        const tokenData = Buffer.concat([
+          Buffer.from(ipfsHash, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         const txData = await safe.createTransaction([
           {
@@ -652,7 +686,10 @@ describe('Membership', function () {
       it('should return 0 when getting the ownerToken using the token id', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+        const tokenData = Buffer.concat([
+          Buffer.from(ipfsHash, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         const txData = await safe.createTransaction([
           {
@@ -727,7 +764,10 @@ describe('Membership', function () {
       it('should be reverted when the sender is not the safe itself', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+        const tokenData = Buffer.concat([
+          Buffer.from(ipfsHash, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         await expect(
           membership.updateToken(recipient.address, tokenData)
@@ -737,7 +777,10 @@ describe('Membership', function () {
       it('should throw an error when the owner have no tokens at all', async function () {
         const updatedIpfsHash = 'HASH';
 
-        const updatedTokenData = abiCoder.encode(['string'], [updatedIpfsHash]);
+        const updatedTokenData = Buffer.concat([
+          Buffer.from(updatedIpfsHash, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         const updateTokenTxData = await safe.createTransaction([
           {
@@ -761,7 +804,10 @@ describe('Membership', function () {
       it('should return address zero when querying the previous token id', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+        const tokenData = Buffer.concat([
+          Buffer.from(ipfsHash, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         const txData = await safe.createTransaction([
           {
@@ -814,7 +860,10 @@ describe('Membership', function () {
       it('should return the updated token data when querying the updated token id', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+        const tokenData = Buffer.concat([
+          Buffer.from(ipfsHash, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         const txData = await safe.createTransaction([
           {
@@ -836,7 +885,10 @@ describe('Membership', function () {
 
         const updatedIpfsHash = 'HASH';
 
-        const updatedTokenData = abiCoder.encode(['string'], [updatedIpfsHash]);
+        const updatedTokenData = Buffer.concat([
+          Buffer.from(updatedIpfsHash, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         const updateTokenTxData = await safe.createTransaction([
           {
@@ -861,13 +913,18 @@ describe('Membership', function () {
 
         const tokenDataResult = await membership.tokenData(2);
 
-        expect(tokenDataResult).to.be.equal(updatedTokenData);
+        expect(tokenDataResult).to.be.equal(
+          `0x${updatedTokenData.toString('hex')}`
+        );
       });
 
       it('should revert when querying the owner of the previous token id', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+        const tokenData = Buffer.concat([
+          Buffer.from(ipfsHash, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         const txData = await safe.createTransaction([
           {
@@ -918,7 +975,10 @@ describe('Membership', function () {
       it('should return the owner when querying the owner of the updated token id', async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+        const tokenData = Buffer.concat([
+          Buffer.from(ipfsHash, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         const txData = await safe.createTransaction([
           {
@@ -971,7 +1031,10 @@ describe('Membership', function () {
       it("should return the token id when querying the owner token using the owner's address", async function () {
         const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
 
-        const tokenData = abiCoder.encode(['string'], [ipfsHash]);
+        const tokenData = Buffer.concat([
+          Buffer.from(ipfsHash, 'ascii'),
+          Buffer.from([1]),
+        ]);
 
         const txData = await safe.createTransaction([
           {
