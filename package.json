@@ -1,4 +1,7 @@
 {
+  "workspaces": [
+    "packages/core"
+  ],
   "devDependencies": {
     "@types/node": "^17.0.33"
   }

@@ -1,5 +1,5 @@
 {
-  "name": "hov-dao",
+  "name": "core",
   "version": "0.1.0",
   "description": "HOV DAO",
   "main": "index.js",
