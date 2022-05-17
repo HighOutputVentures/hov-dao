@@ -52,11 +52,13 @@
     "@gnosis.pm/safe-core-sdk": "^2.1.0",
     "@gnosis.pm/safe-ethers-lib": "^1.1.0",
     "@gnosis.pm/safe-service-client": "^1.1.2",
+    "@notionhq/client": "^1.0.4",
     "@openzeppelin/contracts": "^4.5.0",
     "@types/ramda": "^0.28.7",
     "hardhat-abi-exporter": "^2.8.0",
     "node-fetch": "^2.6.7",
     "ramda": "^0.28.0",
+    "sinon": "^14.0.0",
     "solidity-bytes-utils": "^0.8.0"
   },
   "engines": {
