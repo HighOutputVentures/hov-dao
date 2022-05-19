@@ -1,10 +1,10 @@
 /* eslint-disable no-unused-vars */
 export enum TokenType {
-  Copper = 'COPPER',
-  Iron = 'IRON',
-  Silver = 'SILVER',
-  Gold = 'GOLD',
-  Platinum = 'PLATINUM',
+  Copper = 'copper',
+  Iron = 'iron',
+  Silver = 'silver',
+  Gold = 'gold',
+  Platinum = 'platinum',
 }
 
 export type MemberData = {

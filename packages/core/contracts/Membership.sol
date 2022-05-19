@@ -17,7 +17,7 @@ contract Membership is ERC721Enumerable {
 
     string public constant IPFS_BASE_URL = "https://ipfs.fleek.co/ipfs/";
 
-    string public constant NAME = "Membership";
+    string public constant NAME = "HOV DAO Membership Contract";
 
     string public constant VERSION = "0.0.1";
     
