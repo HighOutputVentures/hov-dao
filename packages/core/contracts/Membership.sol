@@ -15,9 +15,7 @@ contract Membership is ERC721Enumerable {
 
     Counters.Counter private _tokenIds;
 
-    string public constant IPFS_BASE_URL = "https://ipfs.fleek.co/ipfs/";
-
-    string public constant NAME = "HOV DAO Membership Contract";
+    string public constant NAME = "HOVX Membership Contract";
 
     string public constant VERSION = "0.0.1";
     
@@ -102,7 +100,7 @@ contract Membership is ERC721Enumerable {
     function _concat(bytes memory _tokenData) private pure returns(string memory) {
         (string memory cid,) = _decodeTokenData(_tokenData);
 
-        string memory uri = string(abi.encodePacked(IPFS_BASE_URL, cid));
+        string memory uri = string(abi.encodePacked("ipfs://", cid));
 
         return uri;
     }
@@ -125,9 +123,9 @@ contract Membership is ERC721Enumerable {
         private 
         pure
         returns(string memory cid, bytes1 power) {
-        cid = string(_tokenData.slice(0, 46));
+        cid = string(_tokenData.slice(0, 59));
 
-        power = bytes1(_tokenData.slice(46, 1));
+        power = bytes1(_tokenData.slice(59, 1));
     }
 
     function transferFrom(

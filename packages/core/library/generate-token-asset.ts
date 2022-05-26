@@ -30,8 +30,8 @@ export async function generateTokenAsset(params: {
   const imageHash = await uploadFile(image);
 
   const metadata = renderMetadata({
-    name: 'HOV DAO Pass',
-    description: 'Membership token for HOV DAO',
+    name: 'HOVX Pass',
+    description: 'Membership token for HOVX',
     image: `ipfs://${imageHash}`,
   });
 

@@ -4,9 +4,11 @@
   "description": "HOV DAO",
   "main": "index.js",
   "scripts": {
-    "compile": "env $(cat .env.secret) env $(cat .env) hardhat compile",
-    "test": "env $(cat .env.secret) env $(cat .env) hardhat test",
-    "script:create-mint-transaction": "env $(cat .env) ts-node scripts/create-mint-transaction.next.ts"
+    "compile": "env $(cat .env) hardhat compile",
+    "test": "hardhat test",
+    "script:create-mint-transaction": "env $(cat .env) ts-node --files scripts/create-mint-transaction.ts",
+    "script:get-token-uri": "env $(cat .env) ts-node --files scripts/get-token-uri.next.ts",
+    "script:deploy-membership-contract": "env $(cat .env) hardhat run scripts/deploy-membership-contract.ts"
   },
   "author": "",
   "license": "ISC",

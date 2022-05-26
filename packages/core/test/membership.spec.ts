@@ -151,7 +151,8 @@ describe('Membership', function () {
 
     describe('#tokenURI', () => {
       it('should have the correct decoded tokenURI', async function () {
-        const cid = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const cid =
+          'bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli';
 
         const tokenData = Buffer.concat([
           Buffer.from(cid, 'ascii'),
@@ -177,14 +178,15 @@ describe('Membership', function () {
         await executedTransaction.transactionResponse?.wait();
 
         const tokenURI = await membership.tokenURI(1);
-
-        expect(tokenURI).to.be.equals(`https://ipfs.fleek.co/ipfs/${cid}`);
+        console.log(tokenURI);
+        expect(tokenURI).to.be.equals(`ipfs://${cid}`);
       });
     });
 
     describe('#tokenPower', () => {
       it('should have the correct decoded tokenPower', async function () {
-        const cid = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const cid =
+          'bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli';
         const power = 1;
 
         const tokenData = Buffer.concat([
@@ -320,7 +322,8 @@ describe('Membership', function () {
       });
 
       it('should be reverted when the sender is not the safe itself', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const ipfsHash =
+          'bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli';
 
         const tokenData = Buffer.concat([
           Buffer.from(ipfsHash, 'ascii'),
@@ -333,7 +336,8 @@ describe('Membership', function () {
       });
 
       it('should revert when the recipient already have an existing token', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const ipfsHash =
+          'bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli';
 
         const tokenData = Buffer.concat([
           Buffer.from(ipfsHash, 'ascii'),
@@ -378,7 +382,8 @@ describe('Membership', function () {
       });
 
       it('should have correct tokenData given the tokenId', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const ipfsHash =
+          'bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli';
 
         const tokenData = Buffer.concat([
           Buffer.from(ipfsHash, 'ascii'),
@@ -409,7 +414,8 @@ describe('Membership', function () {
       });
 
       it('should have the correct owner given the tokenId', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const ipfsHash =
+          'bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli';
 
         const tokenData = Buffer.concat([
           Buffer.from(ipfsHash, 'ascii'),
@@ -440,7 +446,8 @@ describe('Membership', function () {
       });
 
       it('should have the correct token id given the owner', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const ipfsHash =
+          'bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli';
 
         const tokenData = Buffer.concat([
           Buffer.from(ipfsHash, 'ascii'),
@@ -471,7 +478,8 @@ describe('Membership', function () {
       });
 
       it('should have the correct decoded tokenURI', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const ipfsHash =
+          'bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli';
 
         const tokenData = Buffer.concat([
           Buffer.from(ipfsHash, 'ascii'),
@@ -499,12 +507,13 @@ describe('Membership', function () {
         const tokenURI = await membership.tokenURI(1);
 
         expect(tokenURI).to.be.equals(
-          'https://ipfs.fleek.co/ipfs/QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo'
+          'ipfs://bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli'
         );
       });
 
       it('should have the correct decoded tokenPower', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const ipfsHash =
+          'bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli';
 
         const tokenData = Buffer.concat([
           Buffer.from(ipfsHash, 'ascii'),
@@ -588,7 +597,8 @@ describe('Membership', function () {
       });
 
       it('should revert when getting the owner of the burned token id', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const ipfsHash =
+          'bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli';
 
         const tokenData = Buffer.concat([
           Buffer.from(ipfsHash, 'ascii'),
@@ -635,7 +645,8 @@ describe('Membership', function () {
       });
 
       it('should the tokenData be address zero when getting the burned token id', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const ipfsHash =
+          'bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli';
 
         const tokenData = Buffer.concat([
           Buffer.from(ipfsHash, 'ascii'),
@@ -684,7 +695,8 @@ describe('Membership', function () {
       });
 
       it('should return 0 when getting the ownerToken using the token id', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const ipfsHash =
+          'bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli';
 
         const tokenData = Buffer.concat([
           Buffer.from(ipfsHash, 'ascii'),
@@ -762,7 +774,8 @@ describe('Membership', function () {
       });
 
       it('should be reverted when the sender is not the safe itself', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const ipfsHash =
+          'bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli';
 
         const tokenData = Buffer.concat([
           Buffer.from(ipfsHash, 'ascii'),
@@ -802,7 +815,8 @@ describe('Membership', function () {
       });
 
       it('should return address zero when querying the previous token id', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const ipfsHash =
+          'bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli';
 
         const tokenData = Buffer.concat([
           Buffer.from(ipfsHash, 'ascii'),
@@ -858,7 +872,8 @@ describe('Membership', function () {
       });
 
       it('should return the updated token data when querying the updated token id', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const ipfsHash =
+          'bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli';
 
         const tokenData = Buffer.concat([
           Buffer.from(ipfsHash, 'ascii'),
@@ -919,7 +934,8 @@ describe('Membership', function () {
       });
 
       it('should revert when querying the owner of the previous token id', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const ipfsHash =
+          'bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli';
 
         const tokenData = Buffer.concat([
           Buffer.from(ipfsHash, 'ascii'),
@@ -973,7 +989,8 @@ describe('Membership', function () {
       });
 
       it('should return the owner when querying the owner of the updated token id', async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const ipfsHash =
+          'bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli';
 
         const tokenData = Buffer.concat([
           Buffer.from(ipfsHash, 'ascii'),
@@ -1029,7 +1046,8 @@ describe('Membership', function () {
       });
 
       it("should return the token id when querying the owner token using the owner's address", async function () {
-        const ipfsHash = 'QmfAvnM89JrqvdhLymbU5sXoAukEJygSLk9cJMBPTyrmxo';
+        const ipfsHash =
+          'bafkreia2m6vdubrbxfws52nj6lfjdzeddkwxccojqutzehamvf4o5rgdli';
 
         const tokenData = Buffer.concat([
           Buffer.from(ipfsHash, 'ascii'),
