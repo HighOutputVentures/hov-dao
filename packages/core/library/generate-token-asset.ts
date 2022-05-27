@@ -25,7 +25,10 @@ export async function generateTokenAsset(params: {
 
   const raw = await fs.readFile(filename, 'utf8');
 
-  const image = Buffer.from(raw.replace('OLORMEISTER', params.message), 'utf8');
+  const image = Buffer.from(
+    raw.replace('ALEXANDER LUIE JHAMES SARITA PBD', params.message),
+    'utf8'
+  );
 
   const imageHash = await uploadFile(image);
 
