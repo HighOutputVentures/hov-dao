@@ -1,27 +1,46 @@
-/* eslint-disable node/no-missing-import */
-import assert from 'assert';
-import hardhat, { ethers } from 'hardhat';
-import createMultisigTransaction from '../library/create-multisig-transaction';
-import { getTokenData, TokenType } from '../library/token-data';
+import { program } from 'commander';
+import { createMultisigTransaction } from '../library/create-multisig-transaction.next';
+import { TokenType } from '../library/types';
+import { generateTokenAsset } from '../library/generate-token-asset';
 
-async function main() {
-  const { OWNER_ADDRESS, TOKEN_TYPE } = process.env;
+const typeToPowerMap = {
+  [TokenType.Copper]: 1,
+  [TokenType.Iron]: 2,
+  [TokenType.Silver]: 3,
+  [TokenType.Gold]: 4,
+  [TokenType.Platinum]: 5,
+};
 
-  assert(OWNER_ADDRESS, 'owner address is not supplied');
+program
+  .requiredOption('-o, --owner <owner>', 'owner address')
+  .requiredOption('-m, --message <message>', 'message')
+  .option('-t, --type <type>', 'token type', 'copper')
+  .action(
+    async ({
+      owner,
+      type,
+      message,
+    }: {
+      owner: string;
+      type: TokenType;
+      message: string;
+    }) => {
+      const hash = await generateTokenAsset({
+        message,
+        type,
+      });
 
-  assert(TOKEN_TYPE, 'token type is not supplied');
-
-  await createMultisigTransaction(
-    'updateToken',
-    [OWNER_ADDRESS, getTokenData(TOKEN_TYPE.toUpperCase() as TokenType)],
-    {
-      ethers,
-      network: hardhat.network.name,
+      await createMultisigTransaction({
+        fragment: 'updateToken',
+        values: [
+          owner,
+          Buffer.concat([
+            Buffer.from(hash, 'ascii'),
+            Buffer.from([typeToPowerMap[type]]),
+          ]),
+        ],
+      });
     }
   );
-}
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+program.parseAsync();

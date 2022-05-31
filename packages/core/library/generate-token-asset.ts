@@ -1,41 +1,48 @@
 import path from 'path';
-import fs from 'fs/promises';
+import { createCanvas, loadImage } from 'canvas';
 import ejs from 'ejs';
-import { uploadFile } from './upload-file';
 import { TokenType } from './types';
+import { uploadFile } from './upload-file';
 
-const template = `{
+const renderMetadata = ejs.compile(`{
   "name": "<%= name %>",
   "description": "<%= description %>",
   "image": "<%= image %>"
-}`;
-
-// const ipfsBaseUrl = 'https://ipfs.fleek.co/ipfs/';
-
-const renderMetadata = ejs.compile(template);
+}`);
 
 export async function generateTokenAsset(params: {
   message: string;
   type: TokenType;
-}): Promise<string> {
-  const filename = path.resolve(
-    __dirname,
-    `../resources/images/${TokenType.Copper}.svg`
+}) {
+  const canvas = createCanvas(1920, 1920, 'svg');
+
+  const ctx = canvas.getContext('2d');
+
+  ctx.drawImage(
+    await loadImage(
+      path.resolve(__dirname, `../resources/images/${params.type}.svg`)
+    ),
+    0,
+    0
   );
 
-  const raw = await fs.readFile(filename, 'utf8');
+  ctx.font = 'bold 32px aleo';
+  ctx.translate(980, 1036);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff';
+  ctx.rotate((-15 * Math.PI) / 180);
+  ctx.fillText(params.message.split('').join(' '), 0, 0);
 
-  const image = Buffer.from(
-    raw.replace('ALEXANDER LUIE JHAMES SARITA PBD', params.message),
-    'utf8'
-  );
+  const image = canvas.toBuffer('image/png', {
+    compressionLevel: 2,
+  });
 
-  const imageHash = await uploadFile(image);
+  const hash = await uploadFile(image);
 
   const metadata = renderMetadata({
     name: 'HOVX Pass',
     description: 'Membership token for HOVX',
-    image: `ipfs://${imageHash}`,
+    image: `ipfs://${hash}`,
   });
 
   return uploadFile(Buffer.from(metadata, 'utf8'));

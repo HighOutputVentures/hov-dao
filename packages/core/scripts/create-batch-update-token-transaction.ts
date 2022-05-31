@@ -36,7 +36,7 @@ program
         console.log(`assets generated for ${address}`);
 
         return {
-          fragment: 'mint',
+          fragment: 'updateToken',
           values: [
             address,
             Buffer.concat([

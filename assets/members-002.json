@@ -1,0 +1,17 @@
+[
+  {
+    "address": "0xC0601A7CdF42E8ef1F14fd544D58172423c37981",
+    "message": "risingfish",
+    "tokenType": "gold"
+  },
+  {
+    "address": "0x3181831504Dd1C97CAA578Cd22C9fBc77E436f28",
+    "message": "itskhembot",
+    "tokenType": "silver"
+  },
+  {
+    "address": "0xbe2489a2796f2c408ba75fa184635181fff238e8",
+    "message": "hakunamatata",
+    "tokenType": "silver"
+  }
+]

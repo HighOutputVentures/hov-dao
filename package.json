@@ -5,5 +5,8 @@
   "devDependencies": {
     "@types/node": "^17.0.33",
     "ts-node": "^10.7.0"
+  },
+  "dependencies": {
+    "canvas": "^2.9.1"
   }
 }

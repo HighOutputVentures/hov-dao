@@ -7,6 +7,10 @@
     "compile": "env $(cat .env) hardhat compile",
     "test": "hardhat test",
     "script:create-mint-transaction": "env $(cat .env) ts-node --files scripts/create-mint-transaction.ts",
+    "script:create-batch-mint-transaction": "env $(cat .env) ts-node --files scripts/create-batch-mint-transaction.ts",
+    "script:create-update-token-transaction": "env $(cat .env) ts-node --files scripts/create-update-token-transaction.ts",
+    "script:create-batch-update-token-transaction": "env $(cat .env) ts-node --files scripts/create-batch-update-token-transaction.ts",
+    "script:create-burn-transaction": "env $(cat .env) ts-node --files scripts/create-burn-transaction.ts",
     "script:get-token-uri": "env $(cat .env) ts-node --files scripts/get-token-uri.next.ts",
     "script:deploy-membership-contract": "env $(cat .env) hardhat run scripts/deploy-membership-contract.ts"
   },
@@ -64,6 +68,7 @@
     "@pinata/sdk": "^1.1.25",
     "@types/ramda": "^0.28.7",
     "bluebird": "^3.7.2",
+    "canvas": "^2.9.1",
     "commander": "^9.2.0",
     "ejs": "^3.1.8",
     "hardhat-abi-exporter": "^2.8.0",
